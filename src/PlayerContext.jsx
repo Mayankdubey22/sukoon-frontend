@@ -39,7 +39,7 @@ export const PlayerProvider = ({ children }) => {
       const artistName = full.primaryArtists || full.artists?.primary?.[0]?.name || '';
       const language = full.language || '';
 
-      const radioRes = await axios.get('${API_BASE_URL}/api/songs/radio', {
+      const radioRes = await axios.get(`${API_BASE_URL}/api/songs/radio`, {
         params: { language, artist: artistName }
       });
       const relatedSongs = radioRes.data.data || [];

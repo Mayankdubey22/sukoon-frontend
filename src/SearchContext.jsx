@@ -15,7 +15,7 @@ export const SearchProvider = ({ children }) => {
   const fetchResults = async (searchQuery) => {
     setLoading(true);
     try {
-      const response = await axios.get('${API_BASE_URL}/api/songs/search-all', {
+      const response = await axios.get(`${API_BASE_URL}/api/songs/search-all`, {
         params: { query: searchQuery }
       });
       setResults(response.data.data);
