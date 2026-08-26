@@ -19,8 +19,11 @@ function HomePage() {
 
     useEffect(() => {
         axios.get(`${API_BASE_URL}/api/songs/home`)
-            .then((res) => setSections(res.data.data))
-            .catch((err) => console.error(err))
+            .then((res) => setSections(res.data?.data || []))
+            .catch((err) => {
+                console.error('Failed to load home:', err);
+                setSections([]);
+            })
             .finally(() => setLoading(false));
     }, []);
 

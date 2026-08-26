@@ -27,7 +27,7 @@ const decodeHtml = (text) => {
 };
 
 function MainContent() {
-  const { query, results, loading, updateQuery } = useSearch();
+  const { query, results, loading, error, updateQuery } = useSearch();
   const navigate = useNavigate();
   const { playSong, currentSong, playQueue } = usePlayer();
 
@@ -56,6 +56,27 @@ function MainContent() {
   return (
     <div className="main-content">
       {loading && <p className="loading-text">Searching...</p>}
+
+      {error && (
+        <div className="error-state">
+          <p>{error}</p>
+        </div>
+      )}
+
+      {query.trim() &&
+        !loading &&
+        !error &&
+        results &&
+        !results.topQuery?.results?.length &&
+        !results.songs?.results?.length &&
+        !results.artists?.results?.length &&
+        !results.albums?.results?.length &&
+        !results.playlists?.results?.length && (
+          <div className="empty-state">
+            <h2>No results found</h2>
+            <p>We couldn't find anything for "{query}".</p>
+          </div>
+        )}
 
       {!query.trim() && !loading && <HomePage />}
 
@@ -204,17 +225,17 @@ function Layout() {
 
           <div className="search-bar">
             <input
-  type="text"
-  placeholder="What do you want to listen to?"
-  value={query}
-  onChange={(e) => {
-    const value = e.target.value;
-    updateQuery(value);
-    if (value.trim() && location.pathname !== '/') {
-      navigate('/');
-    }
-  }}
-/>
+              type="text"
+              placeholder="What do you want to listen to?"
+              value={query}
+              onChange={(e) => {
+                const value = e.target.value;
+                updateQuery(value);
+                if (value.trim() && location.pathname !== '/') {
+                  navigate('/');
+                }
+              }}
+            />
           </div>
         </div>
 

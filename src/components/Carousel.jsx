@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-function Carousel({ items, renderItem }) {
+function Carousel({ items = [], renderItem }) {
   const trackRef = useRef(null);
   const isDragging = useRef(false);
   const startX = useRef(0);
@@ -84,7 +84,7 @@ function Carousel({ items, renderItem }) {
         onMouseMove={handleMouseMove}
         onClickCapture={handleClickCapture}
       >
-        {items.map((item, i) => renderItem(item, i))}
+        {(items || []).map((item, i) => renderItem(item, i))}
       </div>
 
       {showRightArrow && (
