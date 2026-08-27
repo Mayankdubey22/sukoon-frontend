@@ -4,140 +4,176 @@ import React, {
   useContext,
   useRef,
 } from 'react';
+
 import axios from 'axios';
 import { API_BASE_URL } from './config';
 
 const PlayerContext = createContext();
 
-export const usePlayer = () => useContext(PlayerContext);
+export const usePlayer = () =>
+  useContext(PlayerContext);
 
-export const PlayerProvider = ({ children }) => {
-  const [currentSong, setCurrentSong] = useState(null);
+export const PlayerProvider = ({
+  children,
+}) => {
+  const [currentSong, setCurrentSong] =
+    useState(null);
+
   const [queue, setQueue] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(-1);
-  const [isShuffled, setIsShuffled] = useState(false);
-  const [repeatMode, setRepeatMode] = useState('off'); // off | all | one
-  const [sourceName, setSourceName] = useState('');
-  const [playerError, setPlayerError] = useState(null);
 
-  // Always keeps the original/unshuffled queue.
+  const [currentIndex, setCurrentIndex] =
+    useState(-1);
+
+  const [isShuffled, setIsShuffled] =
+    useState(false);
+
+  // off | all | one
+  const [repeatMode, setRepeatMode] =
+    useState('off');
+
+  const [sourceName, setSourceName] =
+    useState('');
+
+  const [playerError, setPlayerError] =
+    useState(null);
+
+  // Keeps the original queue before shuffle.
   const originalQueue = useRef([]);
 
   const fetchFullSong = async (songId) => {
+    if (!songId) {
+      throw new Error('Invalid song ID.');
+    }
+
     const response = await axios.get(
       `${API_BASE_URL}/api/songs/song/${songId}`
     );
 
-    const song = response.data?.data?.[0];
+    const song =
+      response.data?.data?.[0];
 
     if (!song) {
-      throw new Error('Song information was not found.');
+      throw new Error(
+        'Song information was not found.'
+      );
     }
 
     return song;
   };
 
   const dedupeSongs = (songs = []) => {
-    const seen = new Set();
+    const seenIds = new Set();
 
     return songs.filter((song) => {
-      if (!song?.id) return false;
-
-      const key = `${(
-        song.name ||
-        song.title ||
-        ''
-      )
-        .toLowerCase()
-        .trim()}-${(
-        song.primaryArtists ||
-        song.artists?.primary?.[0]?.name ||
-        ''
-      )
-        .toLowerCase()
-        .trim()}`;
-
-      if (seen.has(key)) {
+      if (!song?.id) {
         return false;
       }
 
-      seen.add(key);
+      if (seenIds.has(song.id)) {
+        return false;
+      }
+
+      seenIds.add(song.id);
+
       return true;
     });
   };
 
   const playSong = async (song) => {
     if (!song?.id) {
-      setPlayerError('This song cannot be played.');
-      return;
+      setPlayerError(
+        'This song cannot be played.'
+      );
+
+      return false;
     }
 
     setPlayerError(null);
 
     try {
-      const full = await fetchFullSong(song.id);
+      const fullSong =
+        await fetchFullSong(song.id);
 
-      setCurrentSong(full);
+      setCurrentSong(fullSong);
 
       const artistName =
-        full.primaryArtists ||
-        full.artists?.primary?.[0]?.name ||
+        fullSong.primaryArtists ||
+        fullSong.artists?.primary
+          ?.map((artist) => artist.name)
+          .join(', ') ||
         '';
 
-      const language = full.language || '';
+      const language =
+        fullSong.language || '';
 
       let relatedSongs = [];
 
       try {
-        const radioRes = await axios.get(
-          `${API_BASE_URL}/api/songs/radio`,
-          {
-            params: {
-              language,
-              artist: artistName,
-            },
-          }
-        );
+        const radioResponse =
+          await axios.get(
+            `${API_BASE_URL}/api/songs/radio`,
+            {
+              params: {
+                language,
+                artist: artistName,
+              },
+            }
+          );
 
-        relatedSongs = radioRes.data?.data || [];
+        relatedSongs =
+          radioResponse.data?.data || [];
       } catch (radioError) {
-        // Playing the requested song should still work
-        // even if the radio API fails.
         console.error(
           'Failed to load radio suggestions:',
           radioError
         );
       }
 
-      const filteredRelated = relatedSongs.filter(
-        (relatedSong) => relatedSong.id !== song.id
-      );
+      const filteredRelated =
+        relatedSongs.filter(
+          (relatedSong) =>
+            relatedSong?.id !== fullSong.id
+        );
 
       const newQueue = dedupeSongs([
-        full,
+        fullSong,
         ...filteredRelated,
       ]);
 
-      originalQueue.current = [...newQueue];
+      originalQueue.current = [
+        ...newQueue,
+      ];
 
       setQueue(newQueue);
 
-      const newCurrentIndex = newQueue.findIndex(
-        (item) => item.id === full.id
-      );
+      const newIndex =
+        newQueue.findIndex(
+          (item) =>
+            item.id === fullSong.id
+        );
 
       setCurrentIndex(
-        newCurrentIndex >= 0 ? newCurrentIndex : 0
+        newIndex >= 0
+          ? newIndex
+          : 0
       );
 
       setIsShuffled(false);
+
       setSourceName('Radio');
+
+      return true;
     } catch (error) {
-      console.error('Failed to play song:', error);
+      console.error(
+        'Failed to play song:',
+        error
+      );
 
       setPlayerError(
         'Unable to play this song. Please try again.'
       );
+
+      return false;
     }
   };
 
@@ -146,69 +182,102 @@ export const PlayerProvider = ({ children }) => {
     startIndex = 0,
     source = ''
   ) => {
-    if (!Array.isArray(songs) || songs.length === 0) {
-      setPlayerError('There are no songs to play.');
-      return;
-    }
-
-    setPlayerError(null);
-
-    try {
-      const deduped = dedupeSongs(songs);
-
-      if (deduped.length === 0) {
-        setPlayerError('There are no playable songs.');
-        return;
-      }
-
-      const targetSong = songs[startIndex];
-
-      const newIndex = targetSong
-        ? deduped.findIndex(
-            (song) => song.id === targetSong.id
-          )
-        : 0;
-
-      const safeIndex =
-        newIndex >= 0 ? newIndex : 0;
-
-      originalQueue.current = [...deduped];
-
-      setQueue(deduped);
-      setCurrentIndex(safeIndex);
-      setIsShuffled(false);
-      setSourceName(source);
-      setPlayerError(null);
-
-      const full = await fetchFullSong(
-        deduped[safeIndex].id
-      );
-
-      setCurrentSong(full);
-    } catch (error) {
-      console.error('Failed to play queue:', error);
-
+    if (
+      !Array.isArray(songs) ||
+      songs.length === 0
+    ) {
       setPlayerError(
-        'Unable to play this song. Please try again.'
+        'There are no songs to play.'
       );
-    }
-  };
 
-  const playNext = async () => {
-    if (queue.length === 0 || currentIndex < 0) {
       return false;
     }
 
     setPlayerError(null);
 
-    // Repeat current song.
-    if (repeatMode === 'one') {
-      try {
-        const full = await fetchFullSong(
-          queue[currentIndex].id
+    try {
+      const dedupedSongs =
+        dedupeSongs(songs);
+
+      if (dedupedSongs.length === 0) {
+        setPlayerError(
+          'There are no playable songs.'
         );
 
-        setCurrentSong(full);
+        return false;
+      }
+
+      const targetSong =
+        songs[startIndex];
+
+      let safeIndex = 0;
+
+      if (targetSong?.id) {
+        const foundIndex =
+          dedupedSongs.findIndex(
+            (song) =>
+              song.id === targetSong.id
+          );
+
+        if (foundIndex >= 0) {
+          safeIndex = foundIndex;
+        }
+      }
+
+      originalQueue.current = [
+        ...dedupedSongs,
+      ];
+
+      setQueue(dedupedSongs);
+
+      setCurrentIndex(safeIndex);
+
+      setIsShuffled(false);
+
+      setSourceName(source);
+
+      const fullSong =
+        await fetchFullSong(
+          dedupedSongs[safeIndex].id
+        );
+
+      setCurrentSong(fullSong);
+
+      return true;
+    } catch (error) {
+      console.error(
+        'Failed to play queue:',
+        error
+      );
+
+      setPlayerError(
+        'Unable to play this song. Please try again.'
+      );
+
+      return false;
+    }
+  };
+
+  const playNext = async () => {
+    if (
+      queue.length === 0 ||
+      currentIndex < 0
+    ) {
+      return false;
+    }
+
+    setPlayerError(null);
+
+    // Repeat one means restart the same song.
+    if (repeatMode === 'one') {
+      try {
+        const fullSong =
+          await fetchFullSong(
+            queue[currentIndex].id
+          );
+
+        setCurrentSong(fullSong);
+
         return true;
       } catch (error) {
         console.error(
@@ -224,25 +293,27 @@ export const PlayerProvider = ({ children }) => {
       }
     }
 
-    let nextIndex = currentIndex + 1;
+    let nextIndex =
+      currentIndex + 1;
 
-    // End of queue.
+    // Reached the end of queue.
     if (nextIndex >= queue.length) {
       if (repeatMode === 'all') {
         nextIndex = 0;
       } else {
-        // No repeat: queue has finished.
         return false;
       }
     }
 
     try {
-      const full = await fetchFullSong(
-        queue[nextIndex].id
-      );
+      const fullSong =
+        await fetchFullSong(
+          queue[nextIndex].id
+        );
 
       setCurrentIndex(nextIndex);
-      setCurrentSong(full);
+
+      setCurrentSong(fullSong);
 
       return true;
     } catch (error) {
@@ -260,21 +331,38 @@ export const PlayerProvider = ({ children }) => {
   };
 
   const playPrevious = async () => {
-    if (queue.length === 0 || currentIndex <= 0) {
+    if (
+      queue.length === 0 ||
+      currentIndex < 0
+    ) {
       return false;
     }
 
     setPlayerError(null);
 
-    const prevIndex = currentIndex - 1;
+    let previousIndex =
+      currentIndex - 1;
+
+    // If on the first song and repeat all
+    // is enabled, go to the last song.
+    if (previousIndex < 0) {
+      if (repeatMode === 'all') {
+        previousIndex =
+          queue.length - 1;
+      } else {
+        return false;
+      }
+    }
 
     try {
-      const full = await fetchFullSong(
-        queue[prevIndex].id
-      );
+      const fullSong =
+        await fetchFullSong(
+          queue[previousIndex].id
+        );
 
-      setCurrentIndex(prevIndex);
-      setCurrentSong(full);
+      setCurrentIndex(previousIndex);
+
+      setCurrentSong(fullSong);
 
       return true;
     } catch (error) {
@@ -291,6 +379,31 @@ export const PlayerProvider = ({ children }) => {
     }
   };
 
+  const shuffleArray = (array) => {
+    const shuffled = [...array];
+
+    for (
+      let i = shuffled.length - 1;
+      i > 0;
+      i--
+    ) {
+      const randomIndex =
+        Math.floor(
+          Math.random() * (i + 1)
+        );
+
+      [
+        shuffled[i],
+        shuffled[randomIndex],
+      ] = [
+        shuffled[randomIndex],
+        shuffled[i],
+      ];
+    }
+
+    return shuffled;
+  };
+
   const toggleShuffle = () => {
     if (queue.length <= 1) {
       return;
@@ -299,64 +412,62 @@ export const PlayerProvider = ({ children }) => {
     setPlayerError(null);
 
     if (!isShuffled) {
-      // Keep everything before and including
-      // the current song in its existing order.
-      const played = queue.slice(
-        0,
-        currentIndex + 1
-      );
+      const currentSongId =
+        currentSong?.id;
 
-      const remaining = queue.slice(
-        currentIndex + 1
-      );
-
-      // Fisher-Yates shuffle.
-      for (
-        let i = remaining.length - 1;
-        i > 0;
-        i--
-      ) {
-        const j = Math.floor(
-          Math.random() * (i + 1)
+      // Keep the currently playing song first.
+      const remainingSongs =
+        queue.filter(
+          (song) =>
+            song.id !== currentSongId
         );
 
-        [remaining[i], remaining[j]] = [
-          remaining[j],
-          remaining[i],
-        ];
-      }
+      const shuffledRemaining =
+        shuffleArray(remainingSongs);
 
-      setQueue([
-        ...played,
-        ...remaining,
-      ]);
+      const newQueue = currentSong
+        ? [
+            currentSong,
+            ...shuffledRemaining,
+          ]
+        : shuffleArray(queue);
+
+      setQueue(newQueue);
+
+      setCurrentIndex(0);
 
       setIsShuffled(true);
-    } else {
-      // Restore the original order.
-      const restoredQueue = [
-        ...originalQueue.current,
-      ];
 
-      setQueue(restoredQueue);
+      return;
+    }
 
-      // Find the current song in the original queue
-      // so currentIndex stays correct.
-      const currentSongId = currentSong?.id;
+    // Restore original order.
+    const restoredQueue = [
+      ...originalQueue.current,
+    ];
 
-      const restoredIndex =
-        restoredQueue.findIndex(
-          (song) => song.id === currentSongId
-        );
+    if (restoredQueue.length === 0) {
+      return;
+    }
 
-      setCurrentIndex(
-        restoredIndex >= 0
-          ? restoredIndex
-          : 0
+    const currentSongId =
+      currentSong?.id;
+
+    const restoredIndex =
+      restoredQueue.findIndex(
+        (song) =>
+          song.id === currentSongId
       );
 
-      setIsShuffled(false);
-    }
+    setQueue(restoredQueue);
+
+    setCurrentIndex(
+      restoredIndex >= 0
+        ? restoredIndex
+        : 0
+    );
+
+    setIsShuffled(false);
   };
 
   const toggleRepeat = () => {
@@ -389,12 +500,15 @@ export const PlayerProvider = ({ children }) => {
         repeatMode,
         sourceName,
         playerError,
+
         playSong,
         playQueue,
         playNext,
         playPrevious,
+
         toggleShuffle,
         toggleRepeat,
+
         clearPlayerError,
       }}
     >

@@ -2,9 +2,14 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLibrary } from '../LibraryContext';
 import { usePlayer } from '../PlayerContext';
-import { Trash2, Trash, Play } from 'lucide-react';
+import {
+  Trash2,
+  Trash,
+  Play,
+  Music,
+} from 'lucide-react';
 
-const decodeHtml = (text) => {
+const decodeHtml = (text = '') => {
   const txt = document.createElement('textarea');
   txt.innerHTML = text;
   return txt.value;
@@ -12,75 +17,339 @@ const decodeHtml = (text) => {
 
 function LocalPlaylistPage() {
   const { id } = useParams();
-  const { playlists, removeFromPlaylist, deletePlaylist } = useLibrary();
-  const { playQueue, currentSong } = usePlayer();
+
+  const {
+    playlists,
+    removeFromPlaylist,
+    deletePlaylist,
+    libraryLoaded,
+  } = useLibrary();
+
+  const {
+    playQueue,
+    currentSong,
+  } = usePlayer();
+
   const navigate = useNavigate();
 
-  const playlist = playlists.find((pl) => pl.id === id);
+  if (!libraryLoaded) {
+    return (
+      <div
+        style={{
+          padding: '20px',
+          color: 'white',
+        }}
+      >
+        Loading playlist...
+      </div>
+    );
+  }
 
-  if (!playlist) return <p style={{ color: 'white', padding: '20px' }}>Playlist not found</p>;
+  const playlist = playlists.find(
+    (item) => item.id === id
+  );
+
+  if (!playlist) {
+    return (
+      <div
+        style={{
+          padding: '20px',
+          color: 'white',
+        }}
+      >
+        <h2>Playlist not found</h2>
+
+        <p style={{ color: '#999' }}>
+          This playlist may have been deleted.
+        </p>
+
+        <button
+          className="back-arrow-btn"
+          onClick={() => navigate('/')}
+        >
+          Go Home
+        </button>
+      </div>
+    );
+  }
+
+  const songs = Array.isArray(
+    playlist.songs
+  )
+    ? playlist.songs.filter(
+        (song) => song?.id
+      )
+    : [];
 
   const handleDeletePlaylist = () => {
-    if (window.confirm(`Delete playlist "${playlist.name}"? This cannot be undone.`)) {
-      deletePlaylist(playlist.id);
-      navigate('/');
-    }
+    const shouldDelete = window.confirm(
+      `Delete playlist "${playlist.name}"? This cannot be undone.`
+    );
+
+    if (!shouldDelete) return;
+
+    deletePlaylist(playlist.id);
+
+    navigate('/');
   };
 
   const handlePlayAll = () => {
-    if (playlist.songs.length > 0) playQueue(playlist.songs, 0, playlist.name);
+    if (songs.length === 0) return;
+
+    playQueue(
+      songs,
+      0,
+      playlist.name
+    );
+  };
+
+  const handlePlaySong = (index) => {
+    playQueue(
+      songs,
+      index,
+      playlist.name
+    );
+  };
+
+  const handleRemoveSong = (song) => {
+    if (!song?.id) return;
+
+    const songName = decodeHtml(
+      song.name ||
+        song.title ||
+        'this song'
+    );
+
+    const shouldRemove = window.confirm(
+      `Remove "${songName}" from "${playlist.name}"?`
+    );
+
+    if (!shouldRemove) return;
+
+    removeFromPlaylist(
+      playlist.id,
+      song.id
+    );
   };
 
   return (
-    <div style={{ padding: '20px', color: 'white' }}>
-      <button onClick={() => navigate(-1)} className="back-arrow-btn" style={{ marginBottom: '20px' }}>
+    <div
+      style={{
+        padding: '20px',
+        color: 'white',
+      }}
+    >
+      {/* BACK BUTTON */}
+
+      <button
+        onClick={() => navigate(-1)}
+        className="back-arrow-btn"
+        style={{
+          marginBottom: '20px',
+        }}
+        title="Go back"
+      >
         ←
       </button>
 
-      <div style={{ display: 'flex', gap: '20px', alignItems: 'center', marginBottom: '30px' }}>
-        <div className="playlist-icon-large">🎵</div>
-        <div style={{ flex: 1 }}>
-          <p style={{ color: '#999', margin: 0 }}>Playlist</p>
-          <h1 style={{ margin: '5px 0' }}>{playlist.name}</h1>
-          <p style={{ color: '#999' }}>{playlist.songs.length} songs</p>
+      {/* PLAYLIST HEADER */}
+
+      <div
+        style={{
+          display: 'flex',
+          gap: '20px',
+          alignItems: 'center',
+          marginBottom: '30px',
+        }}
+      >
+        <div className="playlist-icon-large">
+          <Music size={60} />
         </div>
-        {playlist.songs.length > 0 && (
-          <button className="play-all-btn" onClick={handlePlayAll}>
-            <Play size={22} fill="black" />
+
+        <div style={{ flex: 1 }}>
+          <p
+            style={{
+              color: '#999',
+              margin: 0,
+            }}
+          >
+            Playlist
+          </p>
+
+          <h1
+            style={{
+              margin: '5px 0',
+            }}
+          >
+            {decodeHtml(
+              playlist.name
+            )}
+          </h1>
+
+          <p
+            style={{
+              color: '#999',
+            }}
+          >
+            {songs.length}{' '}
+            {songs.length === 1
+              ? 'song'
+              : 'songs'}
+          </p>
+        </div>
+
+        {/* PLAY ALL */}
+
+        {songs.length > 0 && (
+          <button
+            className="play-all-btn"
+            onClick={handlePlayAll}
+            title="Play all"
+          >
+            <Play
+              size={22}
+              fill="black"
+            />
           </button>
         )}
-        <button className="delete-playlist-page-btn" onClick={handleDeletePlaylist}>
-          <Trash size={18} /> Delete Playlist
+
+        {/* DELETE PLAYLIST */}
+
+        <button
+          className="delete-playlist-page-btn"
+          onClick={
+            handleDeletePlaylist
+          }
+          title="Delete playlist"
+        >
+          <Trash size={18} />
+          Delete Playlist
         </button>
       </div>
 
-      {playlist.songs.length === 0 && (
-        <p style={{ color: '#666' }}>No songs yet. Add songs using the + button next to any track.</p>
-      )}
+      {/* EMPTY STATE */}
 
-      <div className="song-list">
-        {playlist.songs.map((song, index) => (
-          <div key={song.id} className={`song-item ${currentSong?.id === song.id ? 'playing' : ''}`}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flex: 1, cursor: 'pointer' }} onClick={() => playQueue(playlist.songs, index, playlist.name)}>
-              <img src={song.image?.[1]?.url} alt={song.name || song.title} />
-              <div>
-                <p className="song-name">{decodeHtml(song.name || song.title)}</p>
-                <p className="song-artist">{decodeHtml(song.artists?.primary?.[0]?.name || song.primaryArtists || '')}</p>
-              </div>
-            </div>
-            <button
-              className="icon-btn"
-              onClick={() => {
-                if (window.confirm(`Remove "${decodeHtml(song.name || song.title)}" from "${playlist.name}"?`)) {
-                  removeFromPlaylist(playlist.id, song.id);
-                }
-              }}
-            >
-              <Trash2 size={18} />
-            </button>
-          </div>
-        ))}
-      </div>
+      {songs.length === 0 ? (
+        <div className="empty-library">
+          <Music size={40} />
+
+          <h2>
+            This playlist is empty
+          </h2>
+
+          <p>
+            Add songs using the playlist
+            button next to any track.
+          </p>
+        </div>
+      ) : (
+        /* SONG LIST */
+
+        <div className="song-list">
+          {songs.map(
+            (song, index) => {
+              const songName =
+                song.name ||
+                song.title ||
+                'Unknown Song';
+
+              const artistName =
+                song.artists?.primary
+                  ?.map(
+                    (artist) =>
+                      artist.name
+                  )
+                  .join(', ') ||
+                song.primaryArtists ||
+                'Unknown Artist';
+
+              const imageUrl =
+                song.image?.[1]?.url ||
+                song.image?.[0]?.url ||
+                '';
+
+              return (
+                <div
+                  key={song.id}
+                  className={`song-item ${
+                    currentSong?.id ===
+                    song.id
+                      ? 'playing'
+                      : ''
+                  }`}
+                >
+                  {/* SONG */}
+
+                  <div
+                    className="song-item-main"
+                    onClick={() =>
+                      handlePlaySong(
+                        index
+                      )
+                    }
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(
+                      event
+                    ) => {
+                      if (
+                        event.key ===
+                          'Enter' ||
+                        event.key === ' '
+                      ) {
+                        event.preventDefault();
+
+                        handlePlaySong(
+                          index
+                        );
+                      }
+                    }}
+                  >
+                    {imageUrl ? (
+                      <img
+                        src={imageUrl}
+                        alt={songName}
+                      />
+                    ) : (
+                      <div className="song-placeholder">
+                        🎵
+                      </div>
+                    )}
+
+                    <div>
+                      <p className="song-name">
+                        {decodeHtml(
+                          songName
+                        )}
+                      </p>
+
+                      <p className="song-artist">
+                        {decodeHtml(
+                          artistName
+                        )}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* REMOVE SONG */}
+
+                  <button
+                    className="icon-btn"
+                    onClick={() =>
+                      handleRemoveSong(
+                        song
+                      )
+                    }
+                    title="Remove from playlist"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              );
+            }
+          )}
+        </div>
+      )}
     </div>
   );
 }

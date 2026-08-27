@@ -4,8 +4,6 @@ import React, {
   useRef,
 } from 'react';
 
-import axios from 'axios';
-
 import {
   Routes,
   Route,
@@ -22,6 +20,10 @@ import {
   Repeat,
   Volume2,
   ArrowLeft,
+  Home,
+  Search,
+  Heart,
+  Library,
 } from 'lucide-react';
 
 import {
@@ -38,20 +40,16 @@ import { LibraryProvider } from './LibraryContext';
 
 import Sidebar from './components/Sidebar';
 import NowPlayingSidebar from './components/NowPlayingSidebar';
+import AddToPlaylistButton from './components/AddToPlaylistButton';
 
+import HomePage from './pages/HomePage';
+import SearchPage from './pages/SearchPage';
 import AlbumPage from './pages/AlbumPage';
 import ArtistPage from './pages/ArtistPage';
-import HomePage from './pages/HomePage';
 import PlaylistPage from './pages/PlaylistPage';
 import LocalPlaylistPage from './pages/LocalPlaylistPage';
 import LikedSongsPage from './pages/LikedSongsPage';
-
-import Carousel from './components/Carousel';
-import AddToPlaylistButton from './components/AddToPlaylistButton';
-
-import { Play as PlayIcon } from 'lucide-react';
-
-import { API_BASE_URL } from './config';
+import LibraryPage from './pages/LibraryPage';
 
 import './App.css';
 
@@ -64,414 +62,106 @@ const decodeHtml = (text) => {
 function MainContent() {
   const {
     query,
-    results,
     loading,
     error,
-    updateQuery,
   } = useSearch();
 
+  if (!query.trim()) {
+    return <HomePage />;
+  }
+
+  return (
+    <SearchPage
+      loading={loading}
+      error={error}
+    />
+  );
+}
+
+function MobileBottomNav() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { query, updateQuery } = useSearch();
 
-  const {
-    playSong,
-    currentSong,
-    playQueue,
-  } = usePlayer();
-
-  const handlePlayArtist = async (
-    e,
-    artistId
-  ) => {
-    e.stopPropagation();
-
-    try {
-      const res = await axios.get(
-        `${API_BASE_URL}/api/songs/artist/${artistId}`
-      );
-
-      const topSongs =
-        res.data?.data?.topSongs || [];
-
-      if (topSongs.length > 0) {
-        playQueue(topSongs, 0);
-      }
-    } catch (err) {
-      console.error(
-        'Failed to play artist:',
-        err
-      );
-    }
+  const goHome = () => {
+    updateQuery('');
+    navigate('/');
   };
 
-  const handlePlayPlaylist = async (
-    e,
-    playlistId
-  ) => {
-    e.stopPropagation();
-
-    try {
-      const res = await axios.get(
-        `${API_BASE_URL}/api/songs/playlist/${playlistId}`
-      );
-
-      const songs =
-        res.data?.data?.songs || [];
-
-      if (songs.length > 0) {
-        playQueue(songs, 0);
-      }
-    } catch (err) {
-      console.error(
-        'Failed to play playlist:',
-        err
-      );
+  const goSearch = () => {
+    if (location.pathname !== '/') {
+      navigate('/');
     }
+
+    // Focus the search input after navigation.
+    setTimeout(() => {
+      const searchInput =
+        document.querySelector(
+          '.search-bar input'
+        );
+
+      searchInput?.focus();
+    }, 100);
   };
 
   return (
-    <div className="main-content">
-      {loading && (
-        <p className="loading-text">
-          Searching...
-        </p>
-      )}
+    <nav className="mobile-bottom-nav">
+      <button
+        className={
+          location.pathname === '/' &&
+          !query.trim()
+            ? 'active'
+            : ''
+        }
+        onClick={goHome}
+      >
+        <Home size={21} />
+        <span>Home</span>
+      </button>
 
-      {error && (
-        <div className="error-state">
-          <p>{error}</p>
-        </div>
-      )}
+      <button
+        className={
+          location.pathname === '/' &&
+          query.trim()
+            ? 'active'
+            : ''
+        }
+        onClick={goSearch}
+      >
+        <Search size={21} />
+        <span>Search</span>
+      </button>
 
-      {query.trim() &&
-        !loading &&
-        !error &&
-        results &&
-        !results.topQuery?.results?.length &&
-        !results.songs?.results?.length &&
-        !results.artists?.results?.length &&
-        !results.albums?.results?.length &&
-        !results.playlists?.results?.length && (
-          <div className="empty-state">
-            <h2>No results found</h2>
+      <button
+        className={
+          location.pathname === '/liked'
+            ? 'active'
+            : ''
+        }
+        onClick={() => {
+          updateQuery('');
+          navigate('/liked');
+        }}
+      >
+        <Heart size={21} />
+        <span>Liked</span>
+      </button>
 
-            <p>
-              We couldn't find anything for "
-              {query}".
-            </p>
-          </div>
-        )}
-
-      {!query.trim() &&
-        !loading && (
-          <HomePage />
-        )}
-
-      {results && (
-        <div className="results-container">
-          {results.topQuery?.results?.length >
-            0 && (
-            <div className="section">
-              <h2>Top Result</h2>
-
-              <div
-                className="top-result-card"
-                onClick={() => {
-                  const item =
-                    results.topQuery
-                      .results[0];
-
-                  if (item.type === 'song') {
-                    playSong(item);
-                  } else if (
-                    item.type === 'album'
-                  ) {
-                    navigate(
-                      `/album/${item.id}`
-                    );
-                  } else if (
-                    item.type === 'artist'
-                  ) {
-                    navigate(
-                      `/artist/${item.id}`
-                    );
-                  }
-                }}
-              >
-                <img
-                  src={
-                    results.topQuery
-                      .results[0]
-                      .image?.[2]?.url
-                  }
-                  alt=""
-                />
-
-                <div>
-                  <p className="top-result-name">
-                    {decodeHtml(
-                      results.topQuery
-                        .results[0]
-                        .name ||
-                        results.topQuery
-                          .results[0]
-                          .title
-                    )}
-                  </p>
-
-                  <p className="top-result-type">
-                    {
-                      results.topQuery
-                        .results[0]
-                        .type
-                    }
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {results.songs?.results?.length >
-            0 && (
-            <div className="section">
-              <h2>Songs</h2>
-
-              <div className="song-list">
-                {results.songs.results
-                  .slice(0, 5)
-                  .map((song) => (
-                    <div
-                      key={song.id}
-                      className={`song-item ${
-                        currentSong?.id ===
-                        song.id
-                          ? 'playing'
-                          : ''
-                      }`}
-                    >
-                      <div
-                        className="song-item-main"
-                        onClick={() =>
-                          playSong(song)
-                        }
-                      >
-                        <img
-                          src={
-                            song.image?.[1]
-                              ?.url
-                          }
-                          alt={song.title}
-                        />
-
-                        <div>
-                          <p className="song-name">
-                            {decodeHtml(
-                              song.title
-                            )}
-                          </p>
-
-                          <p className="song-artist">
-                            {decodeHtml(
-                              song.primaryArtists ||
-                                ''
-                            )}
-                          </p>
-                        </div>
-                      </div>
-
-                      <AddToPlaylistButton
-                        song={song}
-                      />
-                    </div>
-                  ))}
-              </div>
-            </div>
-          )}
-
-          {results.artists?.results?.length >
-            0 && (
-            <div className="section">
-              <h2>Artists</h2>
-
-              <Carousel
-                items={
-                  results.artists.results
-                }
-                renderItem={(artist) => (
-                  <div
-                    key={artist.id}
-                    className="artist-card"
-                    onClick={() =>
-                      navigate(
-                        `/artist/${artist.id}`
-                      )
-                    }
-                  >
-                    <div className="card-image-wrapper artist-image-wrapper">
-                      <img
-                        src={
-                          artist.image?.[2]
-                            ?.url ||
-                          artist.image?.[1]
-                            ?.url ||
-                          artist.image?.[0]
-                            ?.url
-                        }
-                        alt={artist.title}
-                        className="artist-img"
-                        onError={(e) => {
-                          e.target.src =
-                            'https://via.placeholder.com/150?text=Artist';
-                        }}
-                      />
-
-                      <div
-                        className="play-overlay"
-                        onClick={(e) =>
-                          handlePlayArtist(
-                            e,
-                            artist.id
-                          )
-                        }
-                      >
-                        <Play
-                          size={20}
-                          fill="black"
-                        />
-                      </div>
-                    </div>
-
-                    <p>
-                      {decodeHtml(
-                        artist.title
-                      )}
-                    </p>
-                  </div>
-                )}
-              />
-            </div>
-          )}
-
-          {results.albums?.results?.length >
-            0 && (
-            <div className="section">
-              <h2>Albums</h2>
-
-              <Carousel
-                items={
-                  results.albums.results
-                }
-                renderItem={(album) => (
-                  <div
-                    key={album.id}
-                    className="album-card"
-                    onClick={() =>
-                      navigate(
-                        `/album/${album.id}`
-                      )
-                    }
-                  >
-                    <div className="card-image-wrapper">
-                      <img
-                        src={
-                          album.image?.[1]
-                            ?.url
-                        }
-                        alt={
-                          album.title ||
-                          album.name
-                        }
-                      />
-
-                      <div className="play-overlay">
-                        <Play
-                          size={20}
-                          fill="black"
-                        />
-                      </div>
-                    </div>
-
-                    <p className="card-title">
-                      {decodeHtml(
-                        album.title ||
-                          album.name
-                      )}
-                    </p>
-
-                    <p className="card-subtitle">
-                      {album.year ||
-                        'Album'}
-                    </p>
-                  </div>
-                )}
-              />
-            </div>
-          )}
-
-          {results.playlists?.results
-            ?.length > 0 && (
-            <div className="section">
-              <h2>Playlists</h2>
-
-              <Carousel
-                items={
-                  results.playlists.results
-                }
-                renderItem={(playlist) => (
-                  <div
-                    key={playlist.id}
-                    className="album-card"
-                    onClick={() =>
-                      navigate(
-                        `/playlist/${playlist.id}`
-                      )
-                    }
-                  >
-                    <div className="card-image-wrapper">
-                      <img
-                        src={
-                          playlist.image?.[1]
-                            ?.url
-                        }
-                        alt={
-                          playlist.title ||
-                          playlist.name
-                        }
-                      />
-
-                      <div
-                        className="play-overlay"
-                        onClick={(e) =>
-                          handlePlayPlaylist(
-                            e,
-                            playlist.id
-                          )
-                        }
-                      >
-                        <Play
-                          size={20}
-                          fill="black"
-                        />
-                      </div>
-                    </div>
-
-                    <p className="card-title">
-                      {decodeHtml(
-                        playlist.title ||
-                          playlist.name
-                      )}
-                    </p>
-
-                    <p className="card-subtitle">
-                      Playlist
-                    </p>
-                  </div>
-                )}
-              />
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+      <button
+        className={
+          location.pathname === '/library'
+            ? 'active'
+            : ''
+        }
+        onClick={() => {
+          updateQuery('');
+          navigate('/library');
+        }}
+      >
+        <Library size={21} />
+        <span>Library</span>
+      </button>
+    </nav>
   );
 }
 
@@ -493,10 +183,27 @@ function Layout() {
     navigate('/');
   };
 
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+
+    updateQuery(value);
+
+    if (
+      value.trim() &&
+      location.pathname !== '/'
+    ) {
+      navigate('/');
+    }
+  };
+
   return (
     <div className="app-shell">
       <header className="app-header">
-        <h1 className="app-logo">
+        <h1
+          className="app-logo"
+          onClick={goHome}
+          title="Go to home"
+        >
           🎵 Sukoon
         </h1>
 
@@ -509,6 +216,7 @@ function Layout() {
                 ? 'hidden'
                 : 'visible',
             }}
+            title="Back to home"
           >
             <ArrowLeft size={20} />
           </button>
@@ -518,24 +226,12 @@ function Layout() {
               type="text"
               placeholder="What do you want to listen to?"
               value={query}
-              onChange={(e) => {
-                const value =
-                  e.target.value;
-
-                updateQuery(value);
-
-                if (
-                  value.trim() &&
-                  location.pathname !== '/'
-                ) {
-                  navigate('/');
-                }
-              }}
+              onChange={handleSearchChange}
             />
           </div>
         </div>
 
-        <div className="header-spacer"></div>
+        <div className="header-spacer" />
       </header>
 
       <div className="app-body">
@@ -575,6 +271,11 @@ function Layout() {
               path="/liked"
               element={<LikedSongsPage />}
             />
+
+            <Route
+              path="/library"
+              element={<LibraryPage />}
+            />
           </Routes>
         </div>
 
@@ -582,6 +283,8 @@ function Layout() {
       </div>
 
       <GlobalPlayer />
+
+      <MobileBottomNav />
     </div>
   );
 }
@@ -602,6 +305,7 @@ function GlobalPlayer() {
   } = usePlayer();
 
   const audioRef = useRef(null);
+  const songIdRef = useRef(null);
 
   const [isPlaying, setIsPlaying] =
     useState(false);
@@ -616,35 +320,53 @@ function GlobalPlayer() {
     useState(1);
 
   useEffect(() => {
-    if (!audioRef.current || !currentSong) {
+    if (!currentSong || !audioRef.current) {
       return;
     }
+
+    const audio = audioRef.current;
+    const currentSongId = currentSong.id;
+
+    songIdRef.current = currentSongId;
 
     setCurrentTime(0);
     setDuration(0);
     setIsPlaying(false);
+
     clearPlayerError();
 
-    const audio = audioRef.current;
-
-    const playAudio = async () => {
+    const playCurrentSong = async () => {
       try {
         await audio.play();
-        setIsPlaying(true);
-      } catch (error) {
-        // Browser autoplay restrictions can cause
-        // play() to reject.
-        console.error(
-          'Audio playback failed:',
-          error
-        );
 
-        setIsPlaying(false);
+        if (
+          songIdRef.current === currentSongId
+        ) {
+          setIsPlaying(true);
+        }
+      } catch (error) {
+        if (
+          songIdRef.current === currentSongId
+        ) {
+          console.error(
+            'Audio playback failed:',
+            error
+          );
+
+          setIsPlaying(false);
+        }
       }
     };
 
-    playAudio();
-  }, [currentSong, clearPlayerError]);
+    playCurrentSong();
+
+    return () => {
+      audio.pause();
+    };
+  }, [
+    currentSong,
+    clearPlayerError,
+  ]);
 
   if (!currentSong) {
     return null;
@@ -677,52 +399,66 @@ function GlobalPlayer() {
   };
 
   const handleTimeUpdate = () => {
-    if (!audioRef.current) {
-      return;
-    }
+    const audio = audioRef.current;
 
-    setCurrentTime(
-      audioRef.current.currentTime
-    );
+    if (!audio) return;
+
+    if (
+      Number.isFinite(audio.currentTime)
+    ) {
+      setCurrentTime(audio.currentTime);
+    }
   };
 
   const handleLoadedMetadata = () => {
-    if (!audioRef.current) {
-      return;
-    }
+    const audio = audioRef.current;
+
+    if (!audio) return;
+
+    const audioDuration = audio.duration;
 
     setDuration(
-      Number.isFinite(
-        audioRef.current.duration
-      )
-        ? audioRef.current.duration
+      Number.isFinite(audioDuration)
+        ? audioDuration
         : 0
     );
   };
 
   const handleSeek = (e) => {
-    if (!audioRef.current) {
-      return;
+    const audio = audioRef.current;
+
+    if (!audio) return;
+
+    const newTime =
+      Number(e.target.value);
+
+    if (Number.isFinite(newTime)) {
+      audio.currentTime = newTime;
+      setCurrentTime(newTime);
     }
-
-    const newTime = Number(e.target.value);
-
-    audioRef.current.currentTime =
-      newTime;
-
-    setCurrentTime(newTime);
   };
 
   const handleVolumeChange = (e) => {
-    const newVolume = Number(
-      e.target.value
-    );
+    const audio = audioRef.current;
+
+    const newVolume =
+      Number(e.target.value);
 
     setVolume(newVolume);
 
-    if (audioRef.current) {
-      audioRef.current.volume =
-        newVolume;
+    if (audio) {
+      audio.volume = newVolume;
+    }
+  };
+
+  const handleEnded = async () => {
+    setIsPlaying(false);
+
+    const movedToNext =
+      await playNext();
+
+    if (!movedToNext) {
+      setIsPlaying(false);
     }
   };
 
@@ -734,44 +470,19 @@ function GlobalPlayer() {
     setIsPlaying(false);
   };
 
-  const handleEnded = async () => {
-    // If repeat-one or another song exists,
-    // playNext will handle it.
-    //
-    // If this is the final song and repeat is off,
-    // stop the player visually as well.
-    const isLastSong =
-      currentIndex >=
-      queue.length - 1;
-
-    if (
-      repeatMode === 'off' &&
-      isLastSong
-    ) {
-      setIsPlaying(false);
-      return;
-    }
-
-    setIsPlaying(false);
-
-    await playNext();
-  };
-
   const formatTime = (time) => {
     if (
-      !time ||
-      !Number.isFinite(time)
+      !Number.isFinite(time) ||
+      time < 0
     ) {
       return '0:00';
     }
 
-    const minutes = Math.floor(
-      time / 60
-    );
+    const minutes =
+      Math.floor(time / 60);
 
-    const seconds = Math.floor(
-      time % 60
-    );
+    const seconds =
+      Math.floor(time % 60);
 
     return `${minutes}:${seconds
       .toString()
@@ -780,22 +491,59 @@ function GlobalPlayer() {
 
   const progressPercentage =
     duration > 0
-      ? (currentTime / duration) * 100
+      ? Math.min(
+          100,
+          (currentTime / duration) * 100
+        )
       : 0;
+
+  const songImage =
+    currentSong.image?.[1]?.url ||
+    currentSong.image?.[0]?.url ||
+    '';
+
+  const songName =
+    currentSong.name ||
+    currentSong.title ||
+    'Unknown song';
+
+  const artistName =
+    currentSong.artists?.primary
+      ?.map((artist) => artist.name)
+      .join(', ') ||
+    currentSong.primaryArtists ||
+    '';
+
+  const audioUrl =
+    currentSong.downloadUrl?.[4]?.url ||
+    currentSong.downloadUrl?.[
+      currentSong.downloadUrl.length - 1
+    ]?.url ||
+    currentSong.downloadUrl?.[0]?.url ||
+    '';
+
+  const disablePrevious =
+    queue.length === 0 ||
+    currentIndex < 0 ||
+    (
+      currentIndex === 0 &&
+      repeatMode !== 'all'
+    );
+
+  const disableNext =
+    queue.length === 0 ||
+    currentIndex < 0 ||
+    (
+      currentIndex >= queue.length - 1 &&
+      repeatMode === 'off'
+    );
 
   return (
     <div className="player-bar">
       <audio
         ref={audioRef}
-        src={
-          currentSong.downloadUrl?.[4]
-            ?.url ||
-          currentSong.downloadUrl?.[0]
-            ?.url
-        }
-        onTimeUpdate={
-          handleTimeUpdate
-        }
+        src={audioUrl}
+        onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={
           handleLoadedMetadata
         }
@@ -805,28 +553,18 @@ function GlobalPlayer() {
 
       <div className="player-left">
         <img
-          src={
-            currentSong.image?.[1]?.url
-          }
-          alt={currentSong.name}
+          src={songImage}
+          alt={songName}
           className="player-thumb"
         />
 
         <div className="player-song-info">
           <p className="player-song-name">
-            {decodeHtml(
-              currentSong.name
-            )}
+            {decodeHtml(songName)}
           </p>
 
           <p className="player-song-artist">
-            {decodeHtml(
-              currentSong.artists?.primary
-                ?.map((artist) =>
-                  artist.name
-                )
-                .join(', ') || ''
-            )}
+            {decodeHtml(artistName)}
           </p>
         </div>
       </div>
@@ -848,9 +586,7 @@ function GlobalPlayer() {
           <button
             className="icon-btn"
             onClick={playPrevious}
-            disabled={
-              currentIndex <= 0
-            }
+            disabled={disablePrevious}
             title="Previous"
           >
             <SkipBack
@@ -884,11 +620,7 @@ function GlobalPlayer() {
           <button
             className="icon-btn"
             onClick={playNext}
-            disabled={
-              repeatMode === 'off' &&
-              currentIndex >=
-                queue.length - 1
-            }
+            disabled={disableNext}
             title="Next"
           >
             <SkipForward
@@ -930,7 +662,10 @@ function GlobalPlayer() {
             type="range"
             min="0"
             max={duration || 0}
-            value={currentTime}
+            value={Math.min(
+              currentTime,
+              duration || 0
+            )}
             onChange={handleSeek}
             className="progress-bar"
             style={{
@@ -963,9 +698,7 @@ function GlobalPlayer() {
           max="1"
           step="0.01"
           value={volume}
-          onChange={
-            handleVolumeChange
-          }
+          onChange={handleVolumeChange}
           className="volume-bar"
           style={{
             background: `linear-gradient(
