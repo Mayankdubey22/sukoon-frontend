@@ -2464,3 +2464,102 @@ input {
   .player-right {
     display: none;
   }
+
+  /* =========================================
+     MOBILE BOTTOM NAVIGATION
+  ========================================= */
+
+  .mobile-bottom-nav {
+    position: fixed;
+
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+
+    height: 82px;
+
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    align-items: center;
+
+    padding: 8px;
+
+    background:
+      linear-gradient(135deg,
+        #0d0d0f,
+        #050506);
+
+    border:
+      1px solid rgba(255, 255, 255, 0.12);
+
+    border-radius: 28px;
+
+    box-shadow:
+      0 -8px 30px rgba(0, 0, 0, 0.5);
+
+    z-index: 1000;
+  }
+
+  .mobile-bottom-nav button {
+    width: 100%;
+    height: 66px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 6px;
+
+    padding: 0;
+
+    border: none;
+    border-radius: 20px;
+
+    background: transparent;
+
+    color: #d1d1d1;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    -webkit-tap-highlight-color: transparent;
+
+    transition:
+      background 0.2s ease,
+      color 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .mobile-bottom-nav button svg {
+    width: 25px;
+    height: 25px;
+
+    stroke-width: 2;
+  }
+
+  .mobile-bottom-nav button.active {
+    color: #1ed760;
+
+    background:
+      linear-gradient(135deg,
+        #242426,
+        #1b1b1d);
+  }
+
+  .mobile-bottom-nav button.active svg {
+    stroke: #1ed760;
+  }
+
+  .mobile-bottom-nav button:active {
+    transform: scale(0.96);
+  }
+
+  .mobile-bottom-nav button:not(.active):hover {
+    color: #fff;
+  }
+
+  }
+}
