@@ -14,10 +14,18 @@ body,
   margin: 0;
 }
 
+html {
+  background: #000;
+}
+
 body {
   background: #000;
   color: #fff;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family:
+    Inter,
+    Arial,
+    Helvetica,
+    sans-serif;
   overflow: hidden;
 }
 
@@ -30,16 +38,27 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
+button,
+input {
+  outline: none;
+}
+
 
 /* =========================================================
    APP SHELL
 ========================================================= */
 
 .app-shell {
+  width: 100%;
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #000;
+  background:
+    radial-gradient(
+      circle at top,
+      #111 0%,
+      #000 55%
+    );
 }
 
 
@@ -49,27 +68,46 @@ button {
 
 .app-header {
   height: 70px;
+
   display: grid;
-  grid-template-columns: 220px minmax(280px, 600px) 220px;
+  grid-template-columns:
+    220px
+    minmax(280px, 600px)
+    220px;
+
   align-items: center;
   gap: 20px;
+
   padding: 0 24px;
+
   background: #000;
+
   flex-shrink: 0;
+
+  z-index: 300;
 }
 
 .app-logo {
   margin: 0;
-  color: #1db954;
+
+  color: #1ed760;
+
   font-size: 24px;
   font-weight: 700;
+
   white-space: nowrap;
+
+  cursor: pointer;
 }
 
 .search-section {
   width: 100%;
+
   display: flex;
+  align-items: center;
   justify-content: center;
+
+  gap: 10px;
 }
 
 .search-bar {
@@ -79,23 +117,38 @@ button {
 .search-bar input {
   width: 100%;
   height: 48px;
+
   padding: 0 22px;
+
   border: none;
   outline: none;
+
   border-radius: 999px;
+
   background: #282828;
+
   color: #fff;
+
   font-size: 15px;
-  transition: background 0.2s ease;
+
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .search-bar input:focus {
   background: #333;
-  outline: 1px solid #555;
+
+  box-shadow:
+    0 0 0 1px #555;
 }
 
 .search-bar input::placeholder {
   color: #a7a7a7;
+}
+
+.header-spacer {
+  width: 100%;
 }
 
 
@@ -105,12 +158,56 @@ button {
 
 .app-body {
   flex: 1;
+
   min-height: 0;
+
   display: grid;
-  grid-template-columns: 250px minmax(0, 1fr) 280px;
+
+  grid-template-columns:
+    250px
+    minmax(0, 1fr)
+    280px;
+
   gap: 8px;
+
   padding: 0 8px;
+
   overflow: hidden;
+}
+
+
+/* =========================================================
+   PAGE CONTENT
+========================================================= */
+
+.page-fade {
+  min-width: 0;
+  min-height: 0;
+
+  overflow-y: auto;
+
+  background: #121212;
+
+  border-radius: 10px;
+
+  padding: 22px 24px 130px;
+
+  animation: fadeIn 0.25s ease;
+}
+
+.main-content {
+  min-width: 0;
+  min-height: 0;
+
+  overflow-y: auto;
+
+  background: #121212;
+
+  border-radius: 10px;
+
+  padding: 22px 24px 130px;
+
+  color: #fff;
 }
 
 
@@ -120,9 +217,13 @@ button {
 
 .sidebar {
   min-height: 0;
+
   overflow-y: auto;
+
   background: #121212;
+
   border-radius: 10px;
+
   padding: 18px 12px 120px;
 }
 
@@ -130,13 +231,17 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
+
   padding: 0 6px;
+
   margin-bottom: 14px;
 }
 
 .sidebar-header h3 {
   margin: 0;
+
   font-size: 16px;
+
   color: #fff;
 }
 
@@ -147,19 +252,28 @@ button {
 
 .playlist-create-box {
   display: flex;
+
   gap: 8px;
+
   margin: 0 6px 14px;
 }
 
 .playlist-create-box input {
   min-width: 0;
+
   flex: 1;
+
   padding: 9px 10px;
+
   border: none;
   outline: none;
+
   border-radius: 6px;
+
   background: #2a2a2a;
+
   color: #fff;
+
   font-size: 13px;
 }
 
@@ -169,11 +283,17 @@ button {
 
 .playlist-create-box button {
   border: none;
+
   border-radius: 6px;
+
   padding: 8px 12px;
+
   background: #1db954;
+
   color: #000;
+
   font-weight: 600;
+
   cursor: pointer;
 }
 
@@ -188,27 +308,42 @@ button {
 
 .sidebar-item {
   width: 100%;
+
   display: flex;
   align-items: center;
+
   gap: 10px;
+
   padding: 10px 8px;
+
   margin-bottom: 4px;
+
   border-radius: 7px;
+
   color: #b3b3b3;
+
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
 }
 
 .sidebar-item:hover {
   background: #242424;
+
   color: #fff;
 }
 
 .sidebar-item p {
   flex: 1;
+
   min-width: 0;
+
   margin: 0;
+
   font-size: 14px;
+
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -216,70 +351,71 @@ button {
 
 .sidebar-count {
   color: #888;
+
   font-size: 12px;
 }
 
 
 /* =========================================================
-   LIKED ICON
+   SIDEBAR ICONS
 ========================================================= */
 
 .liked-icon {
   width: 36px;
   height: 36px;
+
   flex-shrink: 0;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   border-radius: 6px;
-  background: linear-gradient(135deg, #450af5, #8e8ee8);
+
+  background:
+    linear-gradient(
+      135deg,
+      #450af5,
+      #8e8ee8
+    );
+
   color: #fff;
 }
-
-
-/* =========================================================
-   PLAYLIST ICON
-========================================================= */
 
 .playlist-icon {
   width: 36px;
   height: 36px;
+
   flex-shrink: 0;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   border-radius: 6px;
+
   background: #333;
+
   color: #fff;
 }
 
 .sidebar-playlist-img {
   width: 36px;
   height: 36px;
+
   flex-shrink: 0;
+
   border-radius: 6px;
+
   object-fit: cover;
 }
 
 .sidebar-divider {
   height: 1px;
+
   background: #2a2a2a;
+
   margin: 14px 4px;
-}
-
-
-/* =========================================================
-   MAIN CONTENT
-========================================================= */
-
-.main-content {
-  min-width: 0;
-  min-height: 0;
-  overflow-y: auto;
-  background: #121212;
-  border-radius: 10px;
-  padding: 22px 24px 130px;
-  color: #fff;
 }
 
 
@@ -293,27 +429,40 @@ button {
 
 .section h2 {
   margin: 0 0 18px;
+
   font-size: 22px;
   font-weight: 700;
+
+  letter-spacing: -0.3px;
 }
 
 
 /* =========================================================
-   HOME / CARDS
+   ALBUM / ARTIST CARDS
 ========================================================= */
 
 .album-card,
 .artist-card {
   min-width: 0;
+
   cursor: pointer;
+
   padding: 8px;
-  border-radius: 8px;
-  transition: background 0.2s ease, transform 0.2s ease;
+
+  border-radius: 10px;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
 }
 
 .album-card:hover,
 .artist-card:hover {
   background: #1d1d1d;
+}
+
+.album-card:hover {
+  transform: translateY(-2px);
 }
 
 
@@ -323,22 +472,45 @@ button {
 
 .card-image-wrapper {
   position: relative;
+
   width: 100%;
+
   overflow: hidden;
+
   border-radius: 8px;
+
   background: #282828;
 }
 
 .card-image-wrapper img {
   width: 100%;
+
   aspect-ratio: 1 / 1;
+
   display: block;
+
   object-fit: cover;
+
   transition: transform 0.25s ease;
 }
 
-.album-card:hover .card-image-wrapper img {
-  transform: scale(1.06);
+.album-card:hover
+.card-image-wrapper img {
+  transform: scale(1.05);
+}
+
+.image-placeholder {
+  width: 100%;
+
+  aspect-ratio: 1 / 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #282828;
+
+  font-size: 35px;
 }
 
 
@@ -348,22 +520,31 @@ button {
 
 .artist-image-wrapper {
   width: 100%;
+
   overflow: hidden;
+
   border-radius: 50%;
+
   background: #282828;
 }
 
 .artist-image-wrapper img {
   width: 100%;
+
   aspect-ratio: 1 / 1;
+
   display: block;
+
   object-fit: cover;
+
   border-radius: 50%;
+
   transition: transform 0.25s ease;
 }
 
-.artist-card:hover .artist-image-wrapper img {
-  transform: scale(1.06);
+.artist-card:hover
+.artist-image-wrapper img {
+  transform: scale(1.05);
 }
 
 .artist-img {
@@ -377,9 +558,12 @@ button {
 
 .album-card .card-title {
   margin: 10px 0 4px;
+
   color: #fff;
+
   font-size: 14px;
   font-weight: 600;
+
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -387,8 +571,11 @@ button {
 
 .album-card .card-subtitle {
   margin: 0;
+
   color: #b3b3b3;
+
   font-size: 12px;
+
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -396,9 +583,12 @@ button {
 
 .artist-card p {
   margin: 10px 0 0;
+
   color: #fff;
+
   font-size: 14px;
   font-weight: 600;
+
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -411,25 +601,42 @@ button {
 
 .play-overlay {
   position: absolute;
+
   right: 10px;
   bottom: 10px;
+
   width: 46px;
   height: 46px;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   border-radius: 50%;
+
   background: #1db954;
+
   color: #000;
+
   opacity: 0;
+
   transform: translateY(10px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
-  transition: opacity 0.2s ease, transform 0.2s ease;
+
+  box-shadow:
+    0 8px 20px
+    rgba(0, 0, 0, 0.45);
+
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 
-.album-card:hover .play-overlay,
-.artist-card:hover .play-overlay {
+.album-card:hover
+.play-overlay,
+.artist-card:hover
+.play-overlay {
   opacity: 1;
+
   transform: translateY(0);
 }
 
@@ -440,17 +647,25 @@ button {
 
 .carousel-wrapper {
   position: relative;
+
   width: 100%;
 }
 
 .carousel-track {
   width: 100%;
+
   display: flex;
+
   gap: 16px;
+
   overflow-x: auto;
+
   scrollbar-width: none;
+
   scroll-behavior: smooth;
+
   cursor: grab;
+
   user-select: none;
 }
 
@@ -464,7 +679,12 @@ button {
 
 .carousel-track .album-card,
 .carousel-track .artist-card {
-  flex: 0 0 calc((100% - 48px) / 4);
+  flex:
+    0 0
+    calc(
+      (100% - 48px) / 4
+    );
+
   min-width: 150px;
 }
 
@@ -475,23 +695,38 @@ button {
 
 .carousel-arrow {
   position: absolute;
+
   top: 42%;
+
   width: 40px;
   height: 40px;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   border: none;
+
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.85);
+
+  background:
+    rgba(0, 0, 0, 0.85);
+
   color: #fff;
+
   cursor: pointer;
+
   z-index: 10;
+
   opacity: 0;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 
-.carousel-wrapper:hover .carousel-arrow {
+.carousel-wrapper:hover
+.carousel-arrow {
   opacity: 1;
 }
 
@@ -518,19 +753,30 @@ button {
 
 .loading-text {
   padding: 20px 0;
+
   color: #aaa;
 }
 
 .error-state {
   margin: 20px 0;
-  padding: 16px;
-  border-radius: 8px;
-  background: rgba(255, 70, 70, 0.1);
+
+  padding: 20px;
+
+  border-radius: 12px;
+
+  background:
+    rgba(255, 70, 70, 0.1);
+
   color: #ff8a8a;
+}
+
+.error-state h2 {
+  margin-top: 0;
 }
 
 .empty-state {
   padding: 60px 20px;
+
   text-align: center;
 }
 
@@ -542,6 +788,30 @@ button {
   color: #aaa;
 }
 
+.retry-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  margin-top: 15px;
+
+  padding: 10px 18px;
+
+  border: none;
+
+  border-radius: 999px;
+
+  background: #1db954;
+
+  color: #000;
+
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
 
 /* =========================================================
    TOP RESULT
@@ -549,40 +819,58 @@ button {
 
 .top-result-card {
   max-width: 430px;
+
   display: flex;
   align-items: center;
+
   gap: 16px;
+
   padding: 16px;
+
   background: #1b1b1b;
+
   border-radius: 10px;
+
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.2s ease;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
 }
 
 .top-result-card:hover {
   background: #282828;
+
   transform: translateY(-2px);
 }
 
 .top-result-card img {
   width: 82px;
   height: 82px;
+
   flex-shrink: 0;
+
   border-radius: 8px;
+
   object-fit: cover;
 }
 
 .top-result-name {
   margin: 0;
+
   color: #fff;
+
   font-size: 20px;
   font-weight: 700;
 }
 
 .top-result-type {
   margin: 6px 0 0;
+
   color: #aaa;
+
   font-size: 13px;
+
   text-transform: capitalize;
 }
 
@@ -593,20 +881,28 @@ button {
 
 .song-list {
   width: 100%;
+
   display: flex;
   flex-direction: column;
+
   gap: 4px;
 }
 
 .song-item {
   width: 100%;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
+
   gap: 12px;
+
   padding: 8px;
+
   border-radius: 8px;
+
   cursor: pointer;
+
   transition: background 0.2s ease;
 }
 
@@ -615,19 +911,25 @@ button {
 }
 
 .song-item.playing {
-  background: rgba(29, 185, 84, 0.12);
+  background:
+    rgba(29, 185, 84, 0.12);
 }
 
-.song-item.playing .song-name {
+.song-item.playing
+.song-name {
   color: #1db954;
 }
 
 .song-item-main {
   min-width: 0;
+
   flex: 1;
+
   display: flex;
   align-items: center;
+
   gap: 14px;
+
   cursor: pointer;
 }
 
@@ -635,8 +937,11 @@ button {
 .song-item img {
   width: 48px;
   height: 48px;
+
   flex-shrink: 0;
+
   border-radius: 6px;
+
   object-fit: cover;
 }
 
@@ -646,9 +951,12 @@ button {
 
 .song-name {
   margin: 0 0 4px;
+
   color: #fff;
+
   font-size: 14px;
   font-weight: 600;
+
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -656,8 +964,11 @@ button {
 
 .song-artist {
   margin: 0;
+
   color: #aaa;
+
   font-size: 12px;
+
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -665,28 +976,42 @@ button {
 
 
 /* =========================================================
-   ICON BUTTON
+   GENERAL ICON BUTTON
 ========================================================= */
 
 .icon-btn {
   position: relative;
+
   width: 36px;
   height: 36px;
+
   flex-shrink: 0;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   padding: 0;
+
   border: none;
+
   border-radius: 50%;
+
   background: transparent;
+
   color: #b3b3b3;
+
   cursor: pointer;
-  transition: color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
 }
 
 .icon-btn:hover {
   color: #fff;
+
   background: #2a2a2a;
 }
 
@@ -696,6 +1021,7 @@ button {
 
 .icon-btn:disabled {
   opacity: 0.35;
+
   cursor: not-allowed;
 }
 
@@ -706,41 +1032,60 @@ button {
 
 .add-to-playlist-wrapper {
   position: relative;
+
   display: flex;
   align-items: center;
+
   gap: 4px;
+
   flex-shrink: 0;
 }
 
 .playlist-dropdown {
   position: absolute;
+
   top: calc(100% + 8px);
   right: 0;
+
   width: 230px;
+
   padding: 10px;
+
   border: 1px solid #333;
+
   border-radius: 10px;
+
   background: #282828;
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6);
+
+  box-shadow:
+    0 12px 35px
+    rgba(0, 0, 0, 0.6);
+
   z-index: 1000;
 }
 
 .playlist-dropdown.open-upward {
   top: auto;
+
   bottom: calc(100% + 8px);
 }
 
 .dropdown-title {
   margin: 0 0 8px;
+
   color: #aaa;
+
   font-size: 11px;
   font-weight: 600;
+
   text-transform: uppercase;
 }
 
 .dropdown-empty {
   margin: 8px 4px;
+
   color: #888;
+
   font-size: 13px;
 }
 
@@ -748,11 +1093,17 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
+
   gap: 10px;
+
   padding: 9px 8px;
+
   border-radius: 6px;
+
   color: #fff;
+
   font-size: 13px;
+
   cursor: pointer;
 }
 
@@ -768,54 +1119,80 @@ button {
 
 .dropdown-divider {
   height: 1px;
+
   margin: 8px 0;
+
   background: #444;
 }
 
 .dropdown-create {
   display: flex;
+
   gap: 6px;
 }
 
 .dropdown-create input {
   min-width: 0;
+
   flex: 1;
+
   padding: 8px;
+
   border: none;
   outline: none;
+
   border-radius: 6px;
+
   background: #1a1a1a;
+
   color: #fff;
+
   font-size: 12px;
 }
 
 .dropdown-create button {
   width: 34px;
+
   border: none;
+
   border-radius: 6px;
+
   background: #1db954;
+
   color: #000;
+
   font-size: 18px;
   font-weight: 700;
+
   cursor: pointer;
 }
 
 
 /* =========================================================
-   PAGE HEADERS
+   PAGE BUTTONS
 ========================================================= */
 
 .back-arrow-btn {
   width: 38px;
   height: 38px;
+
+  flex-shrink: 0;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   border: none;
+
   border-radius: 50%;
+
   background: #282828;
+
   color: #fff;
+
   cursor: pointer;
+
+  transition: background 0.2s ease;
 }
 
 .back-arrow-btn:hover {
@@ -831,56 +1208,78 @@ button {
 .liked-icon-large {
   width: 200px;
   height: 200px;
+
   flex-shrink: 0;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   border-radius: 10px;
+
   font-size: 60px;
 }
 
 .playlist-icon-large {
-  background: linear-gradient(135deg, #303030, #171717);
+  background:
+    linear-gradient(
+      135deg,
+      #303030,
+      #171717
+    );
 }
 
 .liked-icon-large {
-  background: linear-gradient(135deg, #450af5, #9c9cf0);
+  background:
+    linear-gradient(
+      135deg,
+      #450af5,
+      #9c9cf0
+    );
+
   color: #fff;
 }
 
 
 /* =========================================================
-   PLAY ALL BUTTON
+   PLAY ALL
 ========================================================= */
 
 .play-all-btn {
   width: 54px;
   height: 54px;
+
   flex-shrink: 0;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   border: none;
+
   border-radius: 50%;
+
   background: #1db954;
+
   color: #000;
+
   cursor: pointer;
-  transition: transform 0.2s ease, background 0.2s ease;
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
 }
 
 .play-all-btn:hover {
   background: #1ed760;
+
   transform: scale(1.06);
 }
-
-
-/* =========================================================
-   PLAYLIST LIKE BUTTON
-========================================================= */
 
 .playlist-like-btn {
   width: 46px;
   height: 46px;
+
   border: 1px solid #444;
 }
 
@@ -896,19 +1295,35 @@ button {
 .delete-playlist-page-btn {
   display: flex;
   align-items: center;
+
   gap: 7px;
+
   padding: 10px 14px;
+
   border: 1px solid #555;
+
   border-radius: 999px;
+
   background: transparent;
+
   color: #ddd;
+
   font-size: 13px;
+
   cursor: pointer;
+
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
 }
 
 .delete-playlist-page-btn:hover {
   border-color: #ff5555;
-  background: rgba(255, 60, 60, 0.08);
+
+  background:
+    rgba(255, 60, 60, 0.08);
+
   color: #ff6b6b;
 }
 
@@ -919,9 +1334,13 @@ button {
 
 .now-playing-sidebar {
   min-height: 0;
+
   overflow-y: auto;
+
   background: #121212;
+
   border-radius: 10px;
+
   padding: 18px 14px 120px;
 }
 
@@ -929,29 +1348,46 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
+
   color: #777;
+
   text-align: center;
 }
 
 .now-playing-art {
   width: 100%;
+
   aspect-ratio: 1 / 1;
+
   display: block;
+
   object-fit: cover;
+
   border-radius: 8px;
+
   margin-bottom: 16px;
 }
 
 .now-playing-sidebar h3 {
   margin: 0 0 6px;
+
   color: #fff;
+
   font-size: 16px;
 }
 
 .now-playing-artist {
   margin: 0 0 22px;
+
   color: #aaa;
+
   font-size: 13px;
+}
+
+.playing-from {
+  color: #777;
+
+  font-size: 12px;
 }
 
 
@@ -961,23 +1397,32 @@ button {
 
 .queue-title {
   margin-bottom: 10px;
+
   color: #aaa;
+
   font-size: 13px;
   font-weight: 600;
 }
 
 .queue-empty {
   color: #777;
+
   font-size: 13px;
 }
 
 .queue-item {
   display: flex;
   align-items: center;
+
   gap: 10px;
+
   padding: 8px;
+
   border-radius: 7px;
+
   cursor: pointer;
+
+  transition: background 0.2s ease;
 }
 
 .queue-item:hover {
@@ -987,8 +1432,11 @@ button {
 .queue-item img {
   width: 42px;
   height: 42px;
+
   flex-shrink: 0;
+
   border-radius: 5px;
+
   object-fit: cover;
 }
 
@@ -998,8 +1446,11 @@ button {
 
 .queue-song-name {
   margin: 0 0 4px;
+
   color: #fff;
+
   font-size: 13px;
+
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1007,8 +1458,11 @@ button {
 
 .queue-song-artist {
   margin: 0;
+
   color: #999;
+
   font-size: 11px;
+
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1016,11 +1470,12 @@ button {
 
 
 /* =========================================================
-   PLAYER BAR
+   PLAYER BAR - DESKTOP
 ========================================================= */
 
 .player-bar {
   position: fixed;
+
   left: 0;
   right: 0;
   bottom: 0;
@@ -1035,19 +1490,21 @@ button {
   padding: 10px 16px;
 
   background: #181818;
-  border-top: 1px solid #303030;
+
+  border-top:
+    1px solid #303030;
 
   color: #fff;
-  z-index: 500;
+
+  z-index: 800;
 }
 
 
-/* =========================================================
-   PLAYER LEFT
-========================================================= */
+/* PLAYER LEFT */
 
 .player-left {
   width: 27%;
+
   min-width: 200px;
 
   display: flex;
@@ -1063,6 +1520,7 @@ button {
   flex-shrink: 0;
 
   border-radius: 5px;
+
   object-fit: cover;
 }
 
@@ -1096,9 +1554,7 @@ button {
 }
 
 
-/* =========================================================
-   PLAYER CENTER
-========================================================= */
+/* PLAYER CENTER */
 
 .player-center {
   flex: 1;
@@ -1129,12 +1585,16 @@ button {
   justify-content: center;
 
   border: none;
+
   border-radius: 50%;
 
   background: #fff;
+
   color: #000;
 
   cursor: pointer;
+
+  transition: transform 0.2s ease;
 }
 
 .play-btn:hover {
@@ -1203,12 +1663,11 @@ button {
 }
 
 
-/* =========================================================
-   PLAYER RIGHT
-========================================================= */
+/* PLAYER RIGHT */
 
 .player-right {
   width: 27%;
+
   min-width: 160px;
 
   display: flex;
@@ -1241,10 +1700,30 @@ button {
   border-radius: 50%;
 
   background: #1db954;
+
   color: #000;
 
   font-size: 9px;
   font-weight: 700;
+}
+
+.player-error {
+  margin: 5px 0 0;
+
+  color: #ff7777;
+
+  font-size: 11px;
+
+  text-align: center;
+}
+
+
+/* =========================================================
+   MOBILE BOTTOM NAV
+========================================================= */
+
+.mobile-bottom-nav {
+  display: none;
 }
 
 
@@ -1255,24 +1734,31 @@ button {
 .skeleton-card {
   display: flex;
   flex-direction: column;
+
   gap: 8px;
 }
 
 .skeleton-img {
   width: 100%;
+
   aspect-ratio: 1 / 1;
+
   border-radius: 8px;
+
   background: #282828;
 }
 
 .skeleton-line {
   height: 12px;
+
   border-radius: 4px;
+
   background: #282828;
 }
 
 .shimmer {
   position: relative;
+
   overflow: hidden;
 }
 
@@ -1287,14 +1773,16 @@ button {
   width: 150%;
   height: 100%;
 
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.08),
-    transparent
-  );
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.08),
+      transparent
+    );
 
-  animation: shimmerMove 1.4s infinite;
+  animation:
+    shimmerMove 1.4s infinite;
 }
 
 @keyframes shimmerMove {
@@ -1308,19 +1796,16 @@ button {
    PAGE ANIMATION
 ========================================================= */
 
-.page-fade {
-  overflow-y: auto;
-  animation: fadeIn 0.25s ease;
-}
-
 @keyframes fadeIn {
   from {
     opacity: 0;
+
     transform: translateY(6px);
   }
 
   to {
     opacity: 1;
+
     transform: translateY(0);
   }
 }
@@ -1332,19 +1817,26 @@ button {
 
 .app-footer {
   margin-top: 50px;
+
   padding: 25px 0;
-  border-top: 1px solid #282828;
+
+  border-top:
+    1px solid #282828;
+
   text-align: center;
+
   color: #777;
 }
 
 .app-footer p {
   margin: 5px 0;
+
   font-size: 13px;
 }
 
 .footer-note {
   color: #555;
+
   font-size: 11px;
 }
 
@@ -1353,26 +1845,30 @@ button {
    SCROLLBAR
 ========================================================= */
 
+.page-fade,
 .main-content,
 .sidebar,
-.now-playing-sidebar,
-.page-fade {
+.now-playing-sidebar {
   scrollbar-width: thin;
-  scrollbar-color: #555 transparent;
+
+  scrollbar-color:
+    #555
+    transparent;
 }
 
+.page-fade::-webkit-scrollbar,
 .main-content::-webkit-scrollbar,
 .sidebar::-webkit-scrollbar,
-.now-playing-sidebar::-webkit-scrollbar,
-.page-fade::-webkit-scrollbar {
+.now-playing-sidebar::-webkit-scrollbar {
   width: 6px;
 }
 
+.page-fade::-webkit-scrollbar-thumb,
 .main-content::-webkit-scrollbar-thumb,
 .sidebar::-webkit-scrollbar-thumb,
-.now-playing-sidebar::-webkit-scrollbar-thumb,
-.page-fade::-webkit-scrollbar-thumb {
+.now-playing-sidebar::-webkit-scrollbar-thumb {
   background: #555;
+
   border-radius: 10px;
 }
 
@@ -1383,7 +1879,10 @@ button {
 
 @media (min-width: 1500px) {
   .app-body {
-    grid-template-columns: 270px minmax(0, 1fr) 300px;
+    grid-template-columns:
+      270px
+      minmax(0, 1fr)
+      300px;
   }
 }
 
@@ -1394,11 +1893,16 @@ button {
 
 @media (max-width: 1200px) {
   .app-header {
-    grid-template-columns: 180px minmax(250px, 500px) 180px;
+    grid-template-columns:
+      180px
+      minmax(250px, 500px)
+      180px;
   }
 
   .app-body {
-    grid-template-columns: 220px minmax(0, 1fr);
+    grid-template-columns:
+      220px
+      minmax(0, 1fr);
   }
 
   .now-playing-sidebar {
@@ -1407,7 +1911,11 @@ button {
 
   .carousel-track .album-card,
   .carousel-track .artist-card {
-    flex: 0 0 calc((100% - 32px) / 3);
+    flex:
+      0 0
+      calc(
+        (100% - 32px) / 3
+      );
   }
 }
 
@@ -1419,7 +1927,9 @@ button {
 @media (max-width: 850px) {
   .app-header {
     grid-template-columns: 1fr;
+
     height: auto;
+
     padding: 14px;
   }
 
@@ -1432,11 +1942,16 @@ button {
   }
 
   .app-body {
-    grid-template-columns: 190px minmax(0, 1fr);
+    grid-template-columns:
+      190px
+      minmax(0, 1fr);
   }
 
-  .main-content {
-    padding: 18px 16px 130px;
+  .page-fade {
+    padding:
+      18px
+      16px
+      130px;
   }
 
   .player-right {
@@ -1445,6 +1960,7 @@ button {
 
   .player-left {
     width: 35%;
+
     min-width: 160px;
   }
 }
@@ -1452,51 +1968,140 @@ button {
 
 /* =========================================================
    MOBILE
-   ONLY ONE MAX-WIDTH 650PX BLOCK
 ========================================================= */
 
 @media (max-width: 650px) {
+
+  /* -----------------------------------------------
+     GLOBAL MOBILE
+  ----------------------------------------------- */
+
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
   body {
-    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    background: #000;
   }
 
   .app-shell {
+    width: 100%;
+    min-height: 100dvh;
     height: auto;
-    min-height: 100vh;
+
+    background:
+      radial-gradient(
+        circle at top,
+        #101010 0%,
+        #000 45%
+      );
   }
 
 
-  /* HEADER */
+  /* -----------------------------------------------
+     MOBILE HEADER
+  ----------------------------------------------- */
 
   .app-header {
     position: sticky;
+
     top: 0;
-    z-index: 400;
-    background: #000;
-    padding: 10px 12px;
+
+    width: 100%;
+
+    height: auto;
+
+    display: block;
+
+    padding:
+      22px 16px
+      16px;
+
+    background:
+      rgba(0, 0, 0, 0.96);
+
+    backdrop-filter:
+      blur(12px);
+
+    z-index: 500;
+  }
+
+  .app-logo {
+    display: none;
+  }
+
+  .header-spacer {
+    display: none;
   }
 
   .search-section {
     width: 100%;
+
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+  }
+
+  .search-bar {
+    width: 100%;
   }
 
   .search-bar input {
+    height: 58px;
+
+    padding:
+      0 20px;
+
+    border-radius: 999px;
+
+    background:
+      linear-gradient(
+        135deg,
+        #252525,
+        #1b1b1b
+      );
+
+    color: #fff;
+
+    font-size: 16px;
+    font-weight: 500;
+
+    box-shadow:
+      0 6px 20px
+      rgba(0, 0, 0, 0.25);
+  }
+
+  .search-bar input::placeholder {
+    color: #b4b4b4;
+  }
+
+  .back-arrow-btn {
+    width: 44px;
     height: 44px;
-    font-size: 14px;
-    padding: 0 18px;
+
+    background: #202020;
   }
 
 
-  /* APP BODY */
+  /* -----------------------------------------------
+     MOBILE BODY
+  ----------------------------------------------- */
 
   .app-body {
     display: block;
+
+    width: 100%;
+
     padding: 0;
+
     overflow: visible;
   }
-
-
-  /* SIDEBARS */
 
   .sidebar,
   .now-playing-sidebar {
@@ -1504,247 +2109,534 @@ button {
   }
 
 
-  /* MAIN CONTENT */
+  /* -----------------------------------------------
+     MOBILE PAGE
+  ----------------------------------------------- */
+
+  .page-fade {
+    width: 100%;
+
+    min-height: auto;
+
+    overflow: visible;
+
+    background: transparent;
+
+    border-radius: 0;
+
+    padding:
+      24px 16px
+      250px;
+  }
 
   .main-content {
-    min-height: calc(100vh - 64px);
+    width: 100%;
+
+    min-height: auto;
+
     overflow: visible;
+
+    background: transparent;
+
     border-radius: 0;
-    padding: 18px 12px 155px;
+
+    padding:
+      24px 16px
+      250px;
   }
 
 
-  /* SECTIONS */
+  /* -----------------------------------------------
+     MOBILE SECTIONS
+  ----------------------------------------------- */
 
   .section {
-    margin-bottom: 28px;
+    margin-bottom: 38px;
   }
 
   .section h2 {
-    margin-bottom: 14px;
-    font-size: 20px;
+    margin-bottom: 18px;
+
+    font-size: 25px;
+    font-weight: 750;
+
+    letter-spacing: -0.5px;
   }
 
 
-  /* CAROUSEL */
+  /* -----------------------------------------------
+     MOBILE CAROUSEL
+  ----------------------------------------------- */
+
+  .carousel-wrapper {
+    width: calc(100% + 16px);
+
+    overflow: visible;
+  }
 
   .carousel-track {
-    gap: 8px;
-    padding-bottom: 4px;
+    width: 100%;
+
+    gap: 14px;
+
+    padding-right: 16px;
+
+    overflow-x: auto;
+
+    cursor: default;
+
+    scroll-snap-type:
+      x proximity;
+
+    -webkit-overflow-scrolling: touch;
   }
 
   .carousel-track .album-card,
   .carousel-track .artist-card {
-    flex: 0 0 46%;
+    flex:
+      0 0
+      calc(48% - 6px);
+
     min-width: 0;
+
+    padding: 0;
+
+    scroll-snap-align: start;
+
+    background: transparent;
   }
 
-  .album-card,
-  .artist-card {
-    padding: 6px;
+
+  /* -----------------------------------------------
+     MOBILE CARDS
+  ----------------------------------------------- */
+
+  .album-card {
+    border-radius: 14px;
   }
 
-  .album-card .card-title,
-  .artist-card p {
-    font-size: 13px;
+  .card-image-wrapper {
+    border-radius: 13px;
+
+    box-shadow:
+      0 8px 25px
+      rgba(0, 0, 0, 0.3);
+  }
+
+  .album-card .card-title {
+    margin:
+      12px 0
+      5px;
+
+    font-size: 15px;
+    font-weight: 700;
+
+    color: #f1f1f1;
   }
 
   .album-card .card-subtitle {
-    font-size: 11px;
+    font-size: 13px;
+
+    color: #a8a8a8;
+
+    line-height: 1.4;
+
+    white-space: normal;
+
+    display: -webkit-box;
+
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+
+    overflow: hidden;
   }
 
 
-  /* HIDE CAROUSEL ARROWS ON MOBILE */
+  /* -----------------------------------------------
+     MOBILE PLAY BUTTON ON CARD
+  ----------------------------------------------- */
+
+  .play-overlay {
+    width: 48px;
+    height: 48px;
+
+    right: 10px;
+    bottom: 10px;
+
+    opacity: 1;
+
+    transform: none;
+
+    background:
+      rgba(255, 255, 255, 0.92);
+
+    color: #111;
+
+    box-shadow:
+      0 5px 18px
+      rgba(0, 0, 0, 0.3);
+  }
 
   .carousel-arrow {
     display: none;
   }
 
 
-  /* PLAY OVERLAY ALWAYS VISIBLE ON TOUCH */
-
-  .play-overlay {
-    width: 40px;
-    height: 40px;
-    right: 8px;
-    bottom: 8px;
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-
-  /* TOP RESULT */
-
-  .top-result-card {
-    max-width: 100%;
-    padding: 12px;
-    gap: 12px;
-  }
-
-  .top-result-card img {
-    width: 68px;
-    height: 68px;
-  }
-
-  .top-result-name {
-    font-size: 17px;
-  }
-
-
-  /* SONG LIST */
-
-  .song-list {
-    gap: 2px;
-  }
-
-  .song-item {
-    gap: 6px;
-    padding: 8px 4px;
-  }
-
-  .song-item-main {
-    gap: 10px;
-  }
-
-  .song-item-main img,
-  .song-item img {
-    width: 46px;
-    height: 46px;
-  }
-
-  .song-name {
-    font-size: 13px;
-  }
-
-  .song-artist {
-    font-size: 11px;
-  }
-
-
-  /* SONG ACTION BUTTONS */
-
-  .add-to-playlist-wrapper {
-    gap: 0;
-  }
-
-  .icon-btn {
-    width: 34px;
-    height: 34px;
-  }
-
-
-  /* DROPDOWN */
-
-  .playlist-dropdown {
-    position: fixed;
-    top: auto;
-    right: 12px;
-    bottom: 125px;
-    width: min(300px, calc(100vw - 24px));
-    max-height: 55vh;
-    overflow-y: auto;
-  }
-
-  .playlist-dropdown.open-upward {
-    top: auto;
-    bottom: 125px;
-  }
-
-
-  /* PAGE HEADERS */
-
-  .back-arrow-btn {
-    width: 36px;
-    height: 36px;
-  }
-
-
-  /* PLAYLIST / LIKED PAGE HEADER */
-
-  .playlist-icon-large,
-  .liked-icon-large {
-    width: 100px;
-    height: 100px;
-    font-size: 38px;
-    border-radius: 8px;
-  }
-
-  .play-all-btn {
-    width: 48px;
-    height: 48px;
-  }
-
-  .playlist-like-btn {
-    width: 42px;
-    height: 42px;
-  }
-
-  .delete-playlist-page-btn {
-    padding: 8px 10px;
-    font-size: 11px;
-    gap: 5px;
-  }
-
-
-  /* PLAYER */
+  /* =================================================
+     MOBILE PLAYER
+  ================================================= */
 
   .player-bar {
-    height: 128px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    padding: 8px 10px 10px;
+    position: fixed;
+
+    left: 12px;
+    right: 12px;
+
+    bottom: 94px;
+
+    width: auto;
+
+    height: 106px;
+
+    display: grid;
+
+    grid-template-columns:
+      minmax(0, 1fr)
+      auto;
+
+    align-items: center;
+
+    gap: 8px;
+
+    padding:
+      12px 14px
+      18px;
+
+    border:
+      1px solid
+      rgba(255, 255, 255, 0.07);
+
+    border-radius: 22px;
+
+    background:
+      linear-gradient(
+        135deg,
+        #1d1d1f,
+        #161617
+      );
+
+    box-shadow:
+      0 12px 40px
+      rgba(0, 0, 0, 0.5);
+
+    z-index: 950;
   }
+
+
+  /* MOBILE PLAYER LEFT */
 
   .player-left {
     width: 100%;
+
     min-width: 0;
-    gap: 10px;
+
+    gap: 12px;
   }
 
   .player-thumb {
-    width: 44px;
-    height: 44px;
+    width: 62px;
+    height: 62px;
+
+    border-radius: 10px;
+  }
+
+  .player-song-info {
+    min-width: 0;
   }
 
   .player-song-name {
-    font-size: 12px;
+    margin-bottom: 5px;
+
+    font-size: 16px;
+    font-weight: 700;
   }
 
   .player-song-artist {
-    font-size: 11px;
+    font-size: 13px;
+
+    color: #b8b8b8;
   }
 
+
+  /* MOBILE PLAYER CENTER */
+
   .player-center {
-    width: 100%;
-    min-width: 0;
-    flex: none;
+    min-width: auto;
+
+    max-width: none;
+
+    width: auto;
+
+    align-self: stretch;
+
+    display: flex;
+
+    justify-content: center;
   }
 
   .player-buttons {
-    gap: 14px;
-    margin-bottom: 4px;
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    margin: 0;
+  }
+
+
+  /* Hide extra desktop controls on mobile */
+
+  .player-buttons
+  > .icon-btn:nth-child(1),
+  .player-buttons
+  > .icon-btn:nth-child(2),
+  .player-buttons
+  > .icon-btn:nth-child(4),
+  .player-buttons
+  > .icon-btn:nth-child(5) {
+    display: none;
+  }
+
+
+  /* Play button */
+
+  .play-btn {
+    width: 46px;
+    height: 46px;
+
+    background: #1ed760;
+
+    color: #000;
+
+    box-shadow:
+      0 6px 20px
+      rgba(29, 185, 84, 0.25);
+  }
+
+  .play-btn:hover {
+    transform: none;
+  }
+
+
+  /* Add playlist button */
+
+  .player-buttons
+  .add-to-playlist-wrapper {
+    display: flex;
+  }
+
+
+  /* Progress */
+
+  .progress-row {
+    position: absolute;
+
+    left: 14px;
+    right: 14px;
+    bottom: 8px;
+
+    width: auto;
+
+    gap: 0;
+  }
+
+  .time-label {
+    display: none;
+  }
+
+  .progress-bar {
+    width: 100%;
+
+    height: 3px;
+
+    flex: 1;
+  }
+
+  .progress-bar::-webkit-slider-thumb {
+    width: 8px;
+    height: 8px;
+  }
+
+  .player-error {
+    display: none;
   }
 
   .player-right {
     display: none;
   }
 
-  .progress-row {
-    gap: 6px;
+
+  /* =================================================
+     MOBILE BOTTOM NAVIGATION
+  ================================================= */
+
+  .mobile-bottom-nav {
+    position: fixed;
+
+    left: 12px;
+    right: 12px;
+
+    bottom: 10px;
+
+    width: auto;
+
+    height: 76px;
+
+    display: grid;
+
+    grid-template-columns:
+      repeat(4, 1fr);
+
+    align-items: center;
+
+    padding: 6px;
+
+    border:
+      1px solid
+      rgba(255, 255, 255, 0.1);
+
+    border-radius: 24px;
+
+    background:
+      rgba(10, 10, 11, 0.96);
+
+    backdrop-filter:
+      blur(20px);
+
+    box-shadow:
+      0 12px 35px
+      rgba(0, 0, 0, 0.55);
+
+    z-index: 1000;
   }
 
-  .time-label {
-    min-width: 32px;
-    font-size: 9px;
+  .mobile-bottom-nav button {
+    height: 62px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 5px;
+
+    padding: 0;
+
+    border: none;
+
+    border-radius: 18px;
+
+    background: transparent;
+
+    color: #b9b9b9;
+
+    cursor: pointer;
+
+    transition:
+      background 0.2s ease,
+      color 0.2s ease;
+  }
+
+  .mobile-bottom-nav button span {
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .mobile-bottom-nav button svg {
+    width: 23px;
+    height: 23px;
+
+    stroke-width: 2;
+  }
+
+  .mobile-bottom-nav button.active {
+    background:
+      linear-gradient(
+        135deg,
+        #292929,
+        #202020
+      );
+
+    color: #1ed760;
+
+    box-shadow:
+      inset
+      0 1px 0
+      rgba(255, 255, 255, 0.05);
+  }
+
+  .mobile-bottom-nav button:active {
+    transform: scale(0.96);
   }
 
 
-  /* FOOTER */
+  /* -----------------------------------------------
+     MOBILE SEARCH / RESULTS
+  ----------------------------------------------- */
+
+  .top-result-card {
+    max-width: 100%;
+
+    border-radius: 14px;
+  }
+
+  .song-item {
+    padding: 9px 5px;
+  }
+
+  .song-item-main {
+    gap: 11px;
+  }
+
+  .song-item-main img,
+  .song-item img {
+    width: 50px;
+    height: 50px;
+
+    border-radius: 8px;
+  }
+
+
+  /* -----------------------------------------------
+     MOBILE LARGE ICONS
+  ----------------------------------------------- */
+
+  .playlist-icon-large,
+  .liked-icon-large {
+    width: 120px;
+    height: 120px;
+
+    font-size: 42px;
+  }
+
+  .delete-playlist-page-btn {
+    padding: 8px 10px;
+
+    font-size: 11px;
+  }
+
+
+  /* -----------------------------------------------
+     FOOTER
+  ----------------------------------------------- */
 
   .app-footer {
     margin-top: 30px;
-    padding: 20px 0;
+
+    padding-bottom: 30px;
   }
 }
 
@@ -1754,45 +2646,105 @@ button {
 ========================================================= */
 
 @media (max-width: 420px) {
+
+  .app-header {
+    padding:
+      18px 12px
+      14px;
+  }
+
+  .page-fade,
   .main-content {
-    padding-left: 10px;
-    padding-right: 10px;
+    padding:
+      20px 12px
+      245px;
+  }
+
+  .section h2 {
+    font-size: 23px;
+  }
+
+  .carousel-wrapper {
+    width: calc(100% + 12px);
+  }
+
+  .carousel-track {
+    gap: 12px;
+
+    padding-right: 12px;
   }
 
   .carousel-track .album-card,
   .carousel-track .artist-card {
-    flex: 0 0 58%;
+    flex:
+      0 0
+      calc(52% - 6px);
   }
 
-  .song-item-main img,
-  .song-item img {
+  .player-bar {
+    left: 8px;
+    right: 8px;
+
+    bottom: 90px;
+
+    height: 100px;
+
+    padding:
+      10px 11px
+      17px;
+  }
+
+  .player-thumb {
+    width: 56px;
+    height: 56px;
+  }
+
+  .player-song-name {
+    font-size: 14px;
+  }
+
+  .player-song-artist {
+    font-size: 12px;
+  }
+
+  .play-btn {
     width: 42px;
     height: 42px;
   }
 
+  .mobile-bottom-nav {
+    left: 8px;
+    right: 8px;
+
+    bottom: 7px;
+
+    height: 72px;
+
+    border-radius: 22px;
+  }
+
+  .mobile-bottom-nav button {
+    height: 58px;
+
+    border-radius: 16px;
+  }
+
+  .mobile-bottom-nav button span {
+    font-size: 11px;
+  }
+
+  .mobile-bottom-nav button svg {
+    width: 21px;
+    height: 21px;
+  }
+
+  .song-item {
+    gap: 6px;
+  }
+
   .playlist-icon-large,
   .liked-icon-large {
-    width: 82px;
-    height: 82px;
-    font-size: 32px;
-  }
-
-  .play-all-btn {
-    width: 44px;
-    height: 44px;
-  }
-
-  .delete-playlist-page-btn {
-    padding: 7px 8px;
-    font-size: 10px;
-  }
-
-  .playlist-like-btn {
-    width: 38px;
-    height: 38px;
-  }
-
-  .player-bar {
-    height: 126px;
+    width: 90px;
+    height: 90px;
   }
 }
