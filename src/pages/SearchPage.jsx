@@ -78,31 +78,61 @@ function SearchPage() {
     }
   };
 
+  /* =========================
+     EMPTY SEARCH
+  ========================= */
+
   if (!query.trim()) {
     return (
-      <div className="empty-state">
-        <h2>Search for music</h2>
-        <p>
-          Search for songs, artists,
-          albums, or playlists.
-        </p>
+      <div className="flex min-h-full min-w-0 items-center justify-center overflow-x-hidden px-5 py-16 text-center text-white">
+        <div className="max-w-md">
+          <h2 className="text-xl font-bold sm:text-2xl">
+            Search for music
+          </h2>
+
+          <p className="mt-2 text-sm text-white/50">
+            Search for songs, artists,
+            albums, or playlists.
+          </p>
+        </div>
       </div>
     );
   }
+
+  /* =========================
+     LOADING
+  ========================= */
 
   if (loading) {
     return (
-      <div className="loading-state">
-        <p>Searching...</p>
+      <div className="flex min-h-full min-w-0 items-center justify-center overflow-x-hidden px-5 py-16 text-white">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+
+          <p className="text-sm text-white/60">
+            Searching...
+          </p>
+        </div>
       </div>
     );
   }
 
+  /* =========================
+     ERROR
+  ========================= */
+
   if (error) {
     return (
-      <div className="error-state">
-        <h2>Search failed</h2>
-        <p>{error}</p>
+      <div className="flex min-h-full min-w-0 items-center justify-center overflow-x-hidden px-5 py-16 text-center text-white">
+        <div className="max-w-md">
+          <h2 className="text-xl font-bold sm:text-2xl">
+            Search failed
+          </h2>
+
+          <p className="mt-2 break-words text-sm text-white/50">
+            {error}
+          </p>
+        </div>
       </div>
     );
   }
@@ -114,27 +144,40 @@ function SearchPage() {
     results?.albums?.results?.length ||
     results?.playlists?.results?.length;
 
+  /* =========================
+     NO RESULTS
+  ========================= */
+
   if (!hasResults) {
     return (
-      <div className="empty-state">
-        <h2>No results found</h2>
+      <div className="flex min-h-full min-w-0 items-center justify-center overflow-x-hidden px-5 py-16 text-center text-white">
+        <div className="max-w-md">
+          <h2 className="text-xl font-bold sm:text-2xl">
+            No results found
+          </h2>
 
-        <p>
-          We couldn't find anything for
-          "{query}".
-        </p>
+          <p className="mt-2 break-words text-sm text-white/50">
+            We couldn't find anything for "
+            {query}".
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="main-content">
-      <div className="results-container">
+    <div className="min-w-0 w-full overflow-x-hidden px-3 py-4 text-white sm:px-5 sm:py-5 md:px-6 lg:px-8">
+      <div className="mx-auto min-w-0 w-full max-w-[1600px]">
 
-        {/* TOP RESULT */}
+        {/* =========================
+            TOP RESULT
+        ========================= */}
+
         {results?.topQuery?.results?.length > 0 && (
-          <div className="section">
-            <h2>Top Result</h2>
+          <section className="mb-8 sm:mb-10">
+            <h2 className="mb-3 text-lg font-bold sm:mb-4 sm:text-2xl">
+              Top Result
+            </h2>
 
             {(() => {
               const item =
@@ -147,7 +190,7 @@ function SearchPage() {
 
               return (
                 <div
-                  className="top-result-card"
+                  className="group flex w-full max-w-xl cursor-pointer items-center gap-3 rounded-xl border border-white/5 bg-white/[0.04] p-3 transition hover:bg-white/[0.08] sm:gap-4 sm:p-4"
                   onClick={() => {
                     if (item.type === 'song') {
                       playSong(item);
@@ -172,40 +215,57 @@ function SearchPage() {
                     }
                   }}
                 >
-                  {image && (
-                    <img
-                      src={image}
-                      alt={
-                        item.name ||
-                        item.title ||
-                        'Result'
-                      }
-                    />
-                  )}
+                  {/* IMAGE */}
 
-                  <div>
-                    <p className="top-result-name">
+                  <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-[#282828] sm:h-20 sm:w-20">
+                    {image ? (
+                      <img
+                        src={image}
+                        alt={
+                          item.name ||
+                          item.title ||
+                          'Result'
+                        }
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-xl sm:text-2xl">
+                        🎵
+                      </div>
+                    )}
+                  </div>
+
+                  {/* INFO */}
+
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-white sm:text-base">
                       {decodeHtml(
-                        item.name || item.title
+                        item.name ||
+                        item.title
                       )}
                     </p>
 
-                    <p className="top-result-type">
+                    <p className="mt-1 text-xs capitalize text-white/50 sm:text-sm">
                       {item.type}
                     </p>
                   </div>
                 </div>
               );
             })()}
-          </div>
+          </section>
         )}
 
-        {/* SONGS */}
-        {results?.songs?.results?.length > 0 && (
-          <div className="section">
-            <h2>Songs</h2>
+        {/* =========================
+            SONGS
+        ========================= */}
 
-            <div className="song-list">
+        {results?.songs?.results?.length > 0 && (
+          <section className="mb-8 sm:mb-10">
+            <h2 className="mb-3 text-lg font-bold sm:mb-4 sm:text-2xl">
+              Songs
+            </h2>
+
+            <div className="flex w-full min-w-0 flex-col overflow-hidden">
               {results.songs.results
                 .slice(0, 10)
                 .map((song) => {
@@ -213,34 +273,62 @@ function SearchPage() {
                     song.image?.[1]?.url ||
                     song.image?.[0]?.url;
 
+                  const isPlaying =
+                    currentSong?.id === song.id;
+
                   return (
                     <div
                       key={song.id}
-                      className={`song-item ${
-                        currentSong?.id === song.id
-                          ? 'playing'
-                          : ''
+                      className={`group flex min-h-[64px] min-w-0 items-center gap-2 rounded-lg px-1.5 py-2 transition sm:min-h-[68px] sm:gap-3 sm:px-3 ${
+                        isPlaying
+                          ? 'bg-[#1db954]/10'
+                          : 'hover:bg-white/[0.06]'
                       }`}
                     >
                       <div
-                        className="song-item-main"
+                        className="flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 sm:gap-3"
                         onClick={() =>
                           playSong(song)
                         }
                       >
-                        {songImage && (
-                          <img
-                            src={songImage}
-                            alt={
-                              song.name ||
-                              song.title ||
-                              'Song'
-                            }
-                          />
-                        )}
+                        {/* COVER */}
 
-                        <div>
-                          <p className="song-name">
+                        <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-md bg-[#282828] sm:h-12 sm:w-12">
+                          {songImage ? (
+                            <img
+                              src={songImage}
+                              alt={
+                                song.name ||
+                                song.title ||
+                                'Song'
+                              }
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-base sm:text-lg">
+                              🎵
+                            </div>
+                          )}
+
+                          {isPlaying && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                              <span className="mx-[1px] h-3 w-[2px] animate-pulse bg-[#1db954]" />
+                              <span className="mx-[1px] h-5 w-[2px] animate-pulse bg-[#1db954] [animation-delay:150ms]" />
+                              <span className="mx-[1px] h-4 w-[2px] animate-pulse bg-[#1db954] [animation-delay:300ms]" />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* INFO */}
+
+                        <div className="min-w-0 flex-1">
+                          <p
+                            className={`truncate text-sm font-medium ${
+                              isPlaying
+                                ? 'text-[#1db954]'
+                                : 'text-white'
+                            }`}
+                          >
                             {decodeHtml(
                               song.name ||
                               song.title ||
@@ -248,7 +336,7 @@ function SearchPage() {
                             )}
                           </p>
 
-                          <p className="song-artist">
+                          <p className="mt-1 truncate text-xs text-white/50">
                             {decodeHtml(
                               song.primaryArtists ||
                               song.artists?.primary
@@ -263,20 +351,29 @@ function SearchPage() {
                         </div>
                       </div>
 
-                      <AddToPlaylistButton
-                        song={song}
-                      />
+                      {/* PLAYLIST */}
+
+                      <div className="shrink-0">
+                        <AddToPlaylistButton
+                          song={song}
+                        />
+                      </div>
                     </div>
                   );
                 })}
             </div>
-          </div>
+          </section>
         )}
 
-        {/* ARTISTS */}
+        {/* =========================
+            ARTISTS
+        ========================= */}
+
         {results?.artists?.results?.length > 0 && (
-          <div className="section">
-            <h2>Artists</h2>
+          <section className="mb-8 sm:mb-10">
+            <h2 className="mb-3 text-lg font-bold sm:mb-4 sm:text-2xl">
+              Artists
+            </h2>
 
             <Carousel
               items={
@@ -291,14 +388,14 @@ function SearchPage() {
                 return (
                   <div
                     key={artist.id}
-                    className="artist-card"
+                    className="w-[125px] shrink-0 cursor-pointer sm:w-[150px] md:w-[170px]"
                     onClick={() =>
                       navigate(
                         `/artist/${artist.id}`
                       )
                     }
                   >
-                    <div className="card-image-wrapper artist-image-wrapper">
+                    <div className="group relative aspect-square overflow-hidden rounded-full bg-[#282828]">
                       {image ? (
                         <img
                           src={image}
@@ -307,16 +404,16 @@ function SearchPage() {
                             artist.title ||
                             'Artist'
                           }
-                          className="artist-img"
+                          className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
                         />
                       ) : (
-                        <div className="image-placeholder">
+                        <div className="flex h-full w-full items-center justify-center text-3xl sm:text-4xl">
                           🎤
                         </div>
                       )}
 
                       <div
-                        className="play-overlay"
+                        className="absolute bottom-1.5 right-1.5 flex h-8 w-8 items-center justify-center rounded-full bg-white text-black opacity-0 shadow-lg transition group-hover:opacity-100 sm:bottom-2 sm:right-2 sm:h-10 sm:w-10"
                         onClick={(e) =>
                           handlePlayArtist(
                             e,
@@ -325,13 +422,20 @@ function SearchPage() {
                         }
                       >
                         <Play
-                          size={20}
-                          fill="black"
+                          size={16}
+                          fill="currentColor"
+                          className="sm:hidden"
+                        />
+
+                        <Play
+                          size={18}
+                          fill="currentColor"
+                          className="hidden sm:block"
                         />
                       </div>
                     </div>
 
-                    <p>
+                    <p className="mt-2 truncate text-sm font-medium text-white sm:mt-3">
                       {decodeHtml(
                         artist.name ||
                         artist.title ||
@@ -342,13 +446,18 @@ function SearchPage() {
                 );
               }}
             />
-          </div>
+          </section>
         )}
 
-        {/* ALBUMS */}
+        {/* =========================
+            ALBUMS
+        ========================= */}
+
         {results?.albums?.results?.length > 0 && (
-          <div className="section">
-            <h2>Albums</h2>
+          <section className="mb-8 sm:mb-10">
+            <h2 className="mb-3 text-lg font-bold sm:mb-4 sm:text-2xl">
+              Albums
+            </h2>
 
             <Carousel
               items={
@@ -363,14 +472,14 @@ function SearchPage() {
                 return (
                   <div
                     key={album.id}
-                    className="album-card"
+                    className="group w-[135px] shrink-0 cursor-pointer sm:w-[160px] md:w-[180px]"
                     onClick={() =>
                       navigate(
                         `/album/${album.id}`
                       )
                     }
                   >
-                    <div className="card-image-wrapper">
+                    <div className="relative aspect-square overflow-hidden rounded-xl bg-[#282828]">
                       {image ? (
                         <img
                           src={image}
@@ -379,22 +488,30 @@ function SearchPage() {
                             album.title ||
                             'Album'
                           }
+                          className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
                         />
                       ) : (
-                        <div className="image-placeholder">
+                        <div className="flex h-full w-full items-center justify-center text-3xl sm:text-4xl">
                           🎵
                         </div>
                       )}
 
-                      <div className="play-overlay">
+                      <div className="absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-full bg-white text-black opacity-0 shadow-lg transition group-hover:opacity-100 sm:bottom-3 sm:right-3 sm:h-10 sm:w-10">
                         <Play
-                          size={20}
-                          fill="black"
+                          size={16}
+                          fill="currentColor"
+                          className="sm:hidden"
+                        />
+
+                        <Play
+                          size={18}
+                          fill="currentColor"
+                          className="hidden sm:block"
                         />
                       </div>
                     </div>
 
-                    <p className="card-title">
+                    <p className="mt-2 truncate text-sm font-semibold sm:mt-3">
                       {decodeHtml(
                         album.name ||
                         album.title ||
@@ -402,21 +519,25 @@ function SearchPage() {
                       )}
                     </p>
 
-                    <p className="card-subtitle">
-                      {album.year ||
-                        'Album'}
+                    <p className="mt-1 truncate text-xs text-white/50">
+                      {album.year || 'Album'}
                     </p>
                   </div>
                 );
               }}
             />
-          </div>
+          </section>
         )}
 
-        {/* PLAYLISTS */}
+        {/* =========================
+            PLAYLISTS
+        ========================= */}
+
         {results?.playlists?.results?.length > 0 && (
-          <div className="section">
-            <h2>Playlists</h2>
+          <section className="mb-8 sm:mb-10">
+            <h2 className="mb-3 text-lg font-bold sm:mb-4 sm:text-2xl">
+              Playlists
+            </h2>
 
             <Carousel
               items={
@@ -431,14 +552,14 @@ function SearchPage() {
                 return (
                   <div
                     key={playlist.id}
-                    className="album-card"
+                    className="group w-[135px] shrink-0 cursor-pointer sm:w-[160px] md:w-[180px]"
                     onClick={() =>
                       navigate(
                         `/playlist/${playlist.id}`
                       )
                     }
                   >
-                    <div className="card-image-wrapper">
+                    <div className="relative aspect-square overflow-hidden rounded-xl bg-[#282828]">
                       {image ? (
                         <img
                           src={image}
@@ -447,15 +568,16 @@ function SearchPage() {
                             playlist.title ||
                             'Playlist'
                           }
+                          className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
                         />
                       ) : (
-                        <div className="image-placeholder">
+                        <div className="flex h-full w-full items-center justify-center text-3xl sm:text-4xl">
                           🎵
                         </div>
                       )}
 
                       <div
-                        className="play-overlay"
+                        className="absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-full bg-white text-black opacity-0 shadow-lg transition group-hover:opacity-100 sm:bottom-3 sm:right-3 sm:h-10 sm:w-10"
                         onClick={(e) =>
                           handlePlayPlaylist(
                             e,
@@ -464,13 +586,20 @@ function SearchPage() {
                         }
                       >
                         <Play
-                          size={20}
-                          fill="black"
+                          size={16}
+                          fill="currentColor"
+                          className="sm:hidden"
+                        />
+
+                        <Play
+                          size={18}
+                          fill="currentColor"
+                          className="hidden sm:block"
                         />
                       </div>
                     </div>
 
-                    <p className="card-title">
+                    <p className="mt-2 truncate text-sm font-semibold sm:mt-3">
                       {decodeHtml(
                         playlist.name ||
                         playlist.title ||
@@ -478,14 +607,14 @@ function SearchPage() {
                       )}
                     </p>
 
-                    <p className="card-subtitle">
+                    <p className="mt-1 truncate text-xs text-white/50">
                       Playlist
                     </p>
                   </div>
                 );
               }}
             />
-          </div>
+          </section>
         )}
 
       </div>

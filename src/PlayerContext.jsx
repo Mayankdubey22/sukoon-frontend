@@ -19,7 +19,8 @@ export const PlayerProvider = ({
   const [currentSong, setCurrentSong] =
     useState(null);
 
-  const [queue, setQueue] = useState([]);
+  const [queue, setQueue] =
+    useState([]);
 
   const [currentIndex, setCurrentIndex] =
     useState(-1);
@@ -39,6 +40,10 @@ export const PlayerProvider = ({
 
   // Keeps the original queue before shuffle.
   const originalQueue = useRef([]);
+
+  /* =====================================================
+     FETCH FULL SONG
+  ===================================================== */
 
   const fetchFullSong = async (songId) => {
     if (!songId) {
@@ -61,6 +66,10 @@ export const PlayerProvider = ({
     return song;
   };
 
+  /* =====================================================
+     DEDUPE SONGS
+  ===================================================== */
+
   const dedupeSongs = (songs = []) => {
     const seenIds = new Set();
 
@@ -78,6 +87,10 @@ export const PlayerProvider = ({
       return true;
     });
   };
+
+  /* =====================================================
+     PLAY SINGLE SONG
+  ===================================================== */
 
   const playSong = async (song) => {
     if (!song?.id) {
@@ -135,10 +148,11 @@ export const PlayerProvider = ({
             relatedSong?.id !== fullSong.id
         );
 
-      const newQueue = dedupeSongs([
-        fullSong,
-        ...filteredRelated,
-      ]);
+      const newQueue =
+        dedupeSongs([
+          fullSong,
+          ...filteredRelated,
+        ]);
 
       originalQueue.current = [
         ...newQueue,
@@ -176,6 +190,10 @@ export const PlayerProvider = ({
       return false;
     }
   };
+
+  /* =====================================================
+     PLAY QUEUE
+  ===================================================== */
 
   const playQueue = async (
     songs,
@@ -258,6 +276,10 @@ export const PlayerProvider = ({
     }
   };
 
+  /* =====================================================
+     PLAY NEXT
+  ===================================================== */
+
   const playNext = async () => {
     if (
       queue.length === 0 ||
@@ -268,7 +290,8 @@ export const PlayerProvider = ({
 
     setPlayerError(null);
 
-    // Repeat one means restart the same song.
+    // Repeat one:
+    // replay the currently playing song.
     if (repeatMode === 'one') {
       try {
         const fullSong =
@@ -330,6 +353,10 @@ export const PlayerProvider = ({
     }
   };
 
+  /* =====================================================
+     PLAY PREVIOUS
+  ===================================================== */
+
   const playPrevious = async () => {
     if (
       queue.length === 0 ||
@@ -343,7 +370,7 @@ export const PlayerProvider = ({
     let previousIndex =
       currentIndex - 1;
 
-    // If on the first song and repeat all
+    // If on first song and repeat all
     // is enabled, go to the last song.
     if (previousIndex < 0) {
       if (repeatMode === 'all') {
@@ -379,6 +406,10 @@ export const PlayerProvider = ({
     }
   };
 
+  /* =====================================================
+     SHUFFLE
+  ===================================================== */
+
   const shuffleArray = (array) => {
     const shuffled = [...array];
 
@@ -411,11 +442,16 @@ export const PlayerProvider = ({
 
     setPlayerError(null);
 
+    /* ---------------------------------------------------
+       TURN SHUFFLE ON
+    --------------------------------------------------- */
+
     if (!isShuffled) {
       const currentSongId =
         currentSong?.id;
 
-      // Keep the currently playing song first.
+      // Remove current song from the
+      // remaining songs.
       const remainingSongs =
         queue.filter(
           (song) =>
@@ -423,8 +459,11 @@ export const PlayerProvider = ({
         );
 
       const shuffledRemaining =
-        shuffleArray(remainingSongs);
+        shuffleArray(
+          remainingSongs
+        );
 
+      // Keep currently playing song first.
       const newQueue = currentSong
         ? [
             currentSong,
@@ -441,7 +480,10 @@ export const PlayerProvider = ({
       return;
     }
 
-    // Restore original order.
+    /* ---------------------------------------------------
+       TURN SHUFFLE OFF
+    --------------------------------------------------- */
+
     const restoredQueue = [
       ...originalQueue.current,
     ];
@@ -470,25 +512,43 @@ export const PlayerProvider = ({
     setIsShuffled(false);
   };
 
+  /* =====================================================
+     REPEAT
+  ===================================================== */
+
   const toggleRepeat = () => {
     setPlayerError(null);
 
-    setRepeatMode((previousMode) => {
-      if (previousMode === 'off') {
-        return 'all';
-      }
+    setRepeatMode(
+      (previousMode) => {
+        if (
+          previousMode === 'off'
+        ) {
+          return 'all';
+        }
 
-      if (previousMode === 'all') {
-        return 'one';
-      }
+        if (
+          previousMode === 'all'
+        ) {
+          return 'one';
+        }
 
-      return 'off';
-    });
+        return 'off';
+      }
+    );
   };
+
+  /* =====================================================
+     CLEAR ERROR
+  ===================================================== */
 
   const clearPlayerError = () => {
     setPlayerError(null);
   };
+
+  /* =====================================================
+     PROVIDER
+  ===================================================== */
 
   return (
     <PlayerContext.Provider
@@ -496,8 +556,10 @@ export const PlayerProvider = ({
         currentSong,
         queue,
         currentIndex,
+
         isShuffled,
         repeatMode,
+
         sourceName,
         playerError,
 

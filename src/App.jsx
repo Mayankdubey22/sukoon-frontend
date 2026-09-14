@@ -1,7 +1,7 @@
 import React, {
   useState,
-  useEffect,
   useRef,
+  useEffect,
 } from 'react';
 
 import {
@@ -12,23 +12,17 @@ import {
 } from 'react-router-dom';
 
 import {
-  Shuffle,
-  SkipBack,
-  Play,
-  Pause,
-  SkipForward,
-  Repeat,
-  Volume2,
   ArrowLeft,
   Home,
   Search,
-  Heart,
   Library,
+  Heart,
+  Mic,
+  MicOff,
 } from 'lucide-react';
 
 import {
   PlayerProvider,
-  usePlayer,
 } from './PlayerContext';
 
 import {
@@ -36,11 +30,13 @@ import {
   useSearch,
 } from './SearchContext';
 
-import { LibraryProvider } from './LibraryContext';
+import {
+  LibraryProvider,
+} from './LibraryContext';
 
 import Sidebar from './components/Sidebar';
 import NowPlayingSidebar from './components/NowPlayingSidebar';
-import AddToPlaylistButton from './components/AddToPlaylistButton';
+import GlobalPlayer from './components/GlobalPlayer';
 
 import HomePage from './pages/HomePage';
 import SearchPage from './pages/SearchPage';
@@ -53,11 +49,15 @@ import LibraryPage from './pages/LibraryPage';
 
 import './App.css';
 
-const decodeHtml = (text) => {
+const decodeHtml = (text = '') => {
   const txt = document.createElement('textarea');
-  txt.innerHTML = text || '';
+  txt.innerHTML = text;
   return txt.value;
 };
+
+/* =========================================================
+   MAIN CONTENT
+========================================================= */
 
 function MainContent() {
   const {
@@ -78,10 +78,18 @@ function MainContent() {
   );
 }
 
+/* =========================================================
+   MOBILE BOTTOM NAVIGATION
+========================================================= */
+
 function MobileBottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { query, updateQuery } = useSearch();
+
+  const {
+    query,
+    updateQuery,
+  } = useSearch();
 
   const goHome = () => {
     updateQuery('');
@@ -93,77 +101,182 @@ function MobileBottomNav() {
       navigate('/');
     }
 
-    // Focus the search input after navigation.
     setTimeout(() => {
       const searchInput =
         document.querySelector(
-          '.search-bar input'
+          '.search-bar-input'
         );
 
       searchInput?.focus();
     }, 100);
   };
 
+  const isHomeActive =
+    location.pathname === '/' &&
+    !query.trim();
+
+  const isSearchActive =
+    location.pathname === '/' &&
+    query.trim();
+
+  const isLikedActive =
+    location.pathname === '/liked';
+
+  const isLibraryActive =
+    location.pathname === '/library';
+
+  const navButtonClass = (active) =>
+    `
+      flex
+      min-w-[58px]
+      flex-1
+      flex-col
+      items-center
+      justify-center
+      gap-0.5
+      rounded-xl
+      px-2
+      py-1.5
+      text-[10px]
+      font-medium
+      transition-all
+      duration-200
+      active:scale-95
+      ${
+        active
+          ? 'text-white'
+          : 'text-gray-400 hover:bg-white/5 hover:text-white'
+      }
+    `;
+
   return (
-    <nav className="mobile-bottom-nav">
+    <nav
+      className="
+        fixed
+        inset-x-0
+        bottom-0
+        z-[70]
+        flex
+        h-[68px]
+        items-center
+        justify-around
+        border-t
+        border-white/10
+        bg-[#121212]/95
+        px-1.5
+        pb-[env(safe-area-inset-bottom)]
+        shadow-[0_-8px_30px_rgba(0,0,0,0.25)]
+        backdrop-blur-xl
+        md:hidden
+      "
+    >
+      {/* HOME */}
+
       <button
-        className={
-          location.pathname === '/' &&
-          !query.trim()
-            ? 'active'
-            : ''
-        }
+        type="button"
+        className={navButtonClass(
+          isHomeActive
+        )}
         onClick={goHome}
+        aria-label="Home"
       >
-        <Home size={21} />
+        <Home
+          size={20}
+          strokeWidth={
+            isHomeActive ? 2.5 : 2
+          }
+        />
+
         <span>Home</span>
       </button>
 
+      {/* SEARCH */}
+
       <button
-        className={
-          location.pathname === '/' &&
-          query.trim()
-            ? 'active'
-            : ''
-        }
+        type="button"
+        className={navButtonClass(
+          isSearchActive
+        )}
         onClick={goSearch}
+        aria-label="Search"
       >
-        <Search size={21} />
+        <Search
+          size={20}
+          strokeWidth={
+            isSearchActive ? 2.5 : 2
+          }
+        />
+
         <span>Search</span>
       </button>
 
+      {/* LIKED */}
+
       <button
-        className={
-          location.pathname === '/liked'
-            ? 'active'
-            : ''
-        }
+        type="button"
+        className={`
+          ${navButtonClass(isLikedActive)}
+          ${
+            isLikedActive
+              ? 'text-[#1db954]'
+              : ''
+          }
+        `}
         onClick={() => {
           updateQuery('');
           navigate('/liked');
         }}
+        aria-label="Liked songs"
       >
-        <Heart size={21} />
+        <Heart
+          size={20}
+          fill={
+            isLikedActive
+              ? 'currentColor'
+              : 'none'
+          }
+          strokeWidth={
+            isLikedActive ? 2.2 : 2
+          }
+        />
+
         <span>Liked</span>
       </button>
 
+      {/* LIBRARY */}
+
       <button
-        className={
-          location.pathname === '/library'
-            ? 'active'
-            : ''
-        }
+        type="button"
+        className={`
+          ${navButtonClass(isLibraryActive)}
+          ${
+            isLibraryActive
+              ? 'text-[#1db954]'
+              : ''
+          }
+        `}
         onClick={() => {
           updateQuery('');
           navigate('/library');
         }}
+        aria-label="Library"
       >
-        <Library size={21} />
+        <Library
+          size={20}
+          strokeWidth={
+            isLibraryActive ? 2.5 : 2
+          }
+        />
+
         <span>Library</span>
       </button>
     </nav>
   );
 }
+
+/* =========================================================
+   LAYOUT
+========================================================= */
 
 function Layout() {
   const {
@@ -174,14 +287,35 @@ function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [
+    isListening,
+    setIsListening,
+  ] = useState(false);
+
+  const [
+    isNowPlayingSidebarOpen,
+    setIsNowPlayingSidebarOpen,
+  ] = useState(false);
+
+  const recognitionRef =
+    useRef(null);
+
   const isOnHome =
     location.pathname === '/' &&
     !query.trim();
+
+  /* -------------------------------------------------------
+     HOME
+  ------------------------------------------------------- */
 
   const goHome = () => {
     updateQuery('');
     navigate('/');
   };
+
+  /* -------------------------------------------------------
+     SEARCH
+  ------------------------------------------------------- */
 
   const handleSearchChange = (e) => {
     const value = e.target.value;
@@ -196,50 +330,376 @@ function Layout() {
     }
   };
 
+  /* -------------------------------------------------------
+     VOICE SEARCH
+  ------------------------------------------------------- */
+
+  const startVoiceSearch = () => {
+    const SpeechRecognition =
+      window.SpeechRecognition ||
+      window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert(
+        'Voice search is not supported in this browser.'
+      );
+
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current?.stop();
+      return;
+    }
+
+    const recognition =
+      new SpeechRecognition();
+
+    recognition.lang = 'en-IN';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+
+    recognitionRef.current =
+      recognition;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+    };
+
+    recognition.onresult = (event) => {
+      let transcript = '';
+
+      for (
+        let i = event.resultIndex;
+        i < event.results.length;
+        i++
+      ) {
+        transcript +=
+          event.results[i][0].transcript;
+      }
+
+      transcript =
+        transcript.trim();
+
+      if (transcript) {
+        updateQuery(transcript);
+
+        if (
+          location.pathname !== '/'
+        ) {
+          navigate('/');
+        }
+      }
+    };
+
+    recognition.onerror = (event) => {
+      console.error(
+        'Speech recognition error:',
+        event.error
+      );
+
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+      recognitionRef.current = null;
+    };
+
+    recognition.start();
+  };
+
+  /* -------------------------------------------------------
+     CLEANUP VOICE SEARCH
+  ------------------------------------------------------- */
+
+  useEffect(() => {
+    return () => {
+      recognitionRef.current?.stop();
+    };
+  }, []);
+
   return (
-    <div className="app-shell">
-      <header className="app-header">
-        <h1
-          className="app-logo"
+    <div
+      className="
+        min-h-screen
+        min-w-0
+        overflow-x-hidden
+        bg-[#121212]
+        text-white
+      "
+    >
+      {/* ===================================================
+          HEADER
+      =================================================== */}
+
+      <header
+        className="
+          fixed
+          inset-x-0
+          top-0
+          z-50
+          flex
+          h-16
+          items-center
+          border-b
+          border-white/5
+          bg-[#121212]/95
+          px-2
+          shadow-[0_4px_20px_rgba(0,0,0,0.15)]
+          backdrop-blur-xl
+          sm:px-5
+        "
+      >
+        {/* LOGO */}
+
+        <button
+          type="button"
           onClick={goHome}
           title="Go to home"
+          aria-label="Go to home"
+          className="
+            hidden
+            select-none
+            whitespace-nowrap
+            rounded-lg
+            text-xl
+            font-bold
+            tracking-tight
+            transition-all
+            duration-200
+            hover:scale-[1.02]
+            hover:text-gray-200
+            focus:outline-none
+            focus:ring-2
+            focus:ring-white/20
+            sm:block
+            md:text-2xl
+          "
         >
           🎵 Sukoon
-        </h1>
+        </button>
 
-        <div className="search-section">
+        {/* SEARCH SECTION */}
+
+        <div
+          className="
+            mx-auto
+            flex
+            min-w-0
+            w-full
+            max-w-2xl
+            items-center
+            gap-1
+            sm:mx-6
+            sm:gap-2
+          "
+        >
+          {/* MOBILE LOGO */}
+
           <button
-            className="back-arrow-btn"
+            type="button"
             onClick={goHome}
-            style={{
-              visibility: isOnHome
-                ? 'hidden'
-                : 'visible',
-            }}
-            title="Back to home"
+            title="Go to home"
+            aria-label="Go to home"
+            className="
+              flex
+              h-9
+              w-9
+              shrink-0
+              items-center
+              justify-center
+              overflow-hidden
+              rounded-lg
+              transition-all
+              duration-200
+              hover:bg-white/5
+              focus:outline-none
+              focus:ring-2
+              focus:ring-white/20
+              sm:h-10
+              sm:w-10
+            "
           >
-            <ArrowLeft size={20} />
+            <img
+              src="/sukoon-logo.png"
+              alt="Sukoon"
+              className="
+                h-8
+                w-8
+                object-contain
+                sm:h-9
+                sm:w-9
+              "
+            />
           </button>
 
-          <div className="search-bar">
+          {/* SEARCH BAR */}
+
+          <div
+            className="
+              flex
+              h-10
+              min-w-0
+              w-full
+              items-center
+              rounded-full
+              border
+              border-transparent
+              bg-[#242424]
+              px-3
+              transition-all
+              duration-200
+              focus-within:border-white/10
+              focus-within:bg-[#2b2b2b]
+              focus-within:shadow-lg
+              focus-within:shadow-black/20
+              sm:h-11
+              sm:px-4
+            "
+          >
+            <Search
+              size={18}
+              className="
+                mr-2
+                shrink-0
+                text-gray-400
+                sm:mr-3
+                sm:size-[19px]
+              "
+            />
+
             <input
               type="text"
               placeholder="What do you want to listen to?"
               value={query}
               onChange={handleSearchChange}
+              className="
+                search-bar-input
+                min-w-0
+                flex-1
+                bg-transparent
+                text-sm
+                text-white
+                outline-none
+                placeholder:text-gray-500
+              "
             />
+
+            {/* VOICE SEARCH */}
+
+            <button
+              type="button"
+              onClick={startVoiceSearch}
+              title={
+                isListening
+                  ? 'Stop listening'
+                  : 'Search by voice'
+              }
+              aria-label={
+                isListening
+                  ? 'Stop voice search'
+                  : 'Search by voice'
+              }
+              className={`
+                ml-1
+                flex
+                h-8
+                w-8
+                shrink-0
+                items-center
+                justify-center
+                rounded-full
+                transition-all
+                duration-200
+                focus:outline-none
+                sm:ml-2
+                ${
+                  isListening
+                    ? `
+                      bg-red-500
+                      text-white
+                      shadow-lg
+                      shadow-red-500/30
+                      hover:bg-red-600
+                    `
+                    : `
+                      text-gray-400
+                      hover:bg-white/10
+                      hover:text-white
+                    `
+                }
+              `}
+            >
+              {isListening ? (
+                <MicOff size={17} />
+              ) : (
+                <Mic size={17} />
+              )}
+            </button>
           </div>
         </div>
 
-        <div className="header-spacer" />
-      </header>
-
-      <div className="app-body">
-        <Sidebar />
+        {/* HEADER SPACER */}
 
         <div
-          className="page-fade"
+          className="
+            hidden
+            w-[100px]
+            shrink-0
+            sm:block
+          "
+        />
+      </header>
+
+      {/* ===================================================
+          MAIN BODY
+      =================================================== */}
+
+      <div
+        className="
+          flex
+          min-h-screen
+          w-full
+          min-w-0
+          pt-16
+          pb-[68px]
+          md:pb-24
+        "
+      >
+        {/* =================================================
+            SIDEBAR
+        ================================================= */}
+
+        <div
+          className="
+            hidden
+            h-[calc(100vh-64px)]
+            w-[260px]
+            shrink-0
+            md:flex
+            lg:w-[280px]
+            xl:w-[300px]
+          "
+        >
+          <Sidebar />
+        </div>
+
+        {/* =================================================
+            PAGE CONTENT
+        ================================================= */}
+
+        <main
           key={location.pathname}
+          className="
+            min-w-0
+            flex-1
+            overflow-y-auto
+            overflow-x-hidden
+            transition-opacity
+            duration-300
+          "
         >
           <Routes>
             <Route
@@ -259,17 +719,23 @@ function Layout() {
 
             <Route
               path="/playlist/local/:id"
-              element={<LocalPlaylistPage />}
+              element={
+                <LocalPlaylistPage />
+              }
             />
 
             <Route
               path="/playlist/:id"
-              element={<PlaylistPage />}
+              element={
+                <PlaylistPage />
+              }
             />
 
             <Route
               path="/liked"
-              element={<LikedSongsPage />}
+              element={
+                <LikedSongsPage />
+              }
             />
 
             <Route
@@ -277,441 +743,55 @@ function Layout() {
               element={<LibraryPage />}
             />
           </Routes>
-        </div>
+        </main>
 
-        <NowPlayingSidebar />
+        {/* =================================================
+            NOW PLAYING SIDEBAR
+        ================================================= */}
+
+        {isNowPlayingSidebarOpen && (
+          <div
+            className="
+              hidden
+              h-[calc(100vh-64px)]
+              w-[280px]
+              shrink-0
+              border-l
+              border-white/5
+              lg:flex
+              xl:w-[320px]
+              2xl:w-[340px]
+            "
+          >
+            <NowPlayingSidebar />
+          </div>
+        )}
       </div>
 
-      <GlobalPlayer />
+      {/* ===================================================
+          GLOBAL PLAYER
+      =================================================== */}
+
+      <GlobalPlayer
+        onDesktopArtworkClick={() =>
+          setIsNowPlayingSidebarOpen(
+            (open) => !open
+          )
+        }
+      />
+
+      {/* ===================================================
+          MOBILE NAVIGATION
+      =================================================== */}
 
       <MobileBottomNav />
     </div>
   );
 }
 
-function GlobalPlayer() {
-  const {
-    currentSong,
-    playNext,
-    playPrevious,
-    toggleShuffle,
-    isShuffled,
-    repeatMode,
-    toggleRepeat,
-    currentIndex,
-    queue,
-    playerError,
-    clearPlayerError,
-  } = usePlayer();
-
-  const audioRef = useRef(null);
-  const songIdRef = useRef(null);
-
-  const [isPlaying, setIsPlaying] =
-    useState(false);
-
-  const [currentTime, setCurrentTime] =
-    useState(0);
-
-  const [duration, setDuration] =
-    useState(0);
-
-  const [volume, setVolume] =
-    useState(1);
-
-  useEffect(() => {
-    if (!currentSong || !audioRef.current) {
-      return;
-    }
-
-    const audio = audioRef.current;
-    const currentSongId = currentSong.id;
-
-    songIdRef.current = currentSongId;
-
-    setCurrentTime(0);
-    setDuration(0);
-    setIsPlaying(false);
-
-    clearPlayerError();
-
-    const playCurrentSong = async () => {
-      try {
-        await audio.play();
-
-        if (
-          songIdRef.current === currentSongId
-        ) {
-          setIsPlaying(true);
-        }
-      } catch (error) {
-        if (
-          songIdRef.current === currentSongId
-        ) {
-          console.error(
-            'Audio playback failed:',
-            error
-          );
-
-          setIsPlaying(false);
-        }
-      }
-    };
-
-    playCurrentSong();
-
-    return () => {
-      audio.pause();
-    };
-  }, [
-    currentSong,
-    clearPlayerError,
-  ]);
-
-  if (!currentSong) {
-    return null;
-  }
-
-  const togglePlay = async () => {
-    const audio = audioRef.current;
-
-    if (!audio) {
-      return;
-    }
-
-    try {
-      if (audio.paused) {
-        await audio.play();
-        setIsPlaying(true);
-        clearPlayerError();
-      } else {
-        audio.pause();
-        setIsPlaying(false);
-      }
-    } catch (error) {
-      console.error(
-        'Unable to play audio:',
-        error
-      );
-
-      setIsPlaying(false);
-    }
-  };
-
-  const handleTimeUpdate = () => {
-    const audio = audioRef.current;
-
-    if (!audio) return;
-
-    if (
-      Number.isFinite(audio.currentTime)
-    ) {
-      setCurrentTime(audio.currentTime);
-    }
-  };
-
-  const handleLoadedMetadata = () => {
-    const audio = audioRef.current;
-
-    if (!audio) return;
-
-    const audioDuration = audio.duration;
-
-    setDuration(
-      Number.isFinite(audioDuration)
-        ? audioDuration
-        : 0
-    );
-  };
-
-  const handleSeek = (e) => {
-    const audio = audioRef.current;
-
-    if (!audio) return;
-
-    const newTime =
-      Number(e.target.value);
-
-    if (Number.isFinite(newTime)) {
-      audio.currentTime = newTime;
-      setCurrentTime(newTime);
-    }
-  };
-
-  const handleVolumeChange = (e) => {
-    const audio = audioRef.current;
-
-    const newVolume =
-      Number(e.target.value);
-
-    setVolume(newVolume);
-
-    if (audio) {
-      audio.volume = newVolume;
-    }
-  };
-
-  const handleEnded = async () => {
-    setIsPlaying(false);
-
-    const movedToNext =
-      await playNext();
-
-    if (!movedToNext) {
-      setIsPlaying(false);
-    }
-  };
-
-  const handleAudioError = () => {
-    console.error(
-      'Audio source failed to load.'
-    );
-
-    setIsPlaying(false);
-  };
-
-  const formatTime = (time) => {
-    if (
-      !Number.isFinite(time) ||
-      time < 0
-    ) {
-      return '0:00';
-    }
-
-    const minutes =
-      Math.floor(time / 60);
-
-    const seconds =
-      Math.floor(time % 60);
-
-    return `${minutes}:${seconds
-      .toString()
-      .padStart(2, '0')}`;
-  };
-
-  const progressPercentage =
-    duration > 0
-      ? Math.min(
-          100,
-          (currentTime / duration) * 100
-        )
-      : 0;
-
-  const songImage =
-    currentSong.image?.[1]?.url ||
-    currentSong.image?.[0]?.url ||
-    '';
-
-  const songName =
-    currentSong.name ||
-    currentSong.title ||
-    'Unknown song';
-
-  const artistName =
-    currentSong.artists?.primary
-      ?.map((artist) => artist.name)
-      .join(', ') ||
-    currentSong.primaryArtists ||
-    '';
-
-  const audioUrl =
-    currentSong.downloadUrl?.[4]?.url ||
-    currentSong.downloadUrl?.[
-      currentSong.downloadUrl.length - 1
-    ]?.url ||
-    currentSong.downloadUrl?.[0]?.url ||
-    '';
-
-  const disablePrevious =
-    queue.length === 0 ||
-    currentIndex < 0 ||
-    (
-      currentIndex === 0 &&
-      repeatMode !== 'all'
-    );
-
-  const disableNext =
-    queue.length === 0 ||
-    currentIndex < 0 ||
-    (
-      currentIndex >= queue.length - 1 &&
-      repeatMode === 'off'
-    );
-
-  return (
-    <div className="player-bar">
-      <audio
-        ref={audioRef}
-        src={audioUrl}
-        onTimeUpdate={handleTimeUpdate}
-        onLoadedMetadata={
-          handleLoadedMetadata
-        }
-        onEnded={handleEnded}
-        onError={handleAudioError}
-      />
-
-      <div className="player-left">
-        <img
-          src={songImage}
-          alt={songName}
-          className="player-thumb"
-        />
-
-        <div className="player-song-info">
-          <p className="player-song-name">
-            {decodeHtml(songName)}
-          </p>
-
-          <p className="player-song-artist">
-            {decodeHtml(artistName)}
-          </p>
-        </div>
-      </div>
-
-      <div className="player-center">
-        <div className="player-buttons">
-          <button
-            className={`icon-btn ${
-              isShuffled
-                ? 'active'
-                : ''
-            }`}
-            onClick={toggleShuffle}
-            title="Shuffle"
-          >
-            <Shuffle size={18} />
-          </button>
-
-          <button
-            className="icon-btn"
-            onClick={playPrevious}
-            disabled={disablePrevious}
-            title="Previous"
-          >
-            <SkipBack
-              size={20}
-              fill="currentColor"
-            />
-          </button>
-
-          <button
-            className="play-btn"
-            onClick={togglePlay}
-            title={
-              isPlaying
-                ? 'Pause'
-                : 'Play'
-            }
-          >
-            {isPlaying ? (
-              <Pause
-                size={18}
-                fill="black"
-              />
-            ) : (
-              <Play
-                size={18}
-                fill="black"
-              />
-            )}
-          </button>
-
-          <button
-            className="icon-btn"
-            onClick={playNext}
-            disabled={disableNext}
-            title="Next"
-          >
-            <SkipForward
-              size={20}
-              fill="currentColor"
-            />
-          </button>
-
-          <button
-            className={`icon-btn ${
-              repeatMode !== 'off'
-                ? 'active'
-                : ''
-            }`}
-            onClick={toggleRepeat}
-            title="Repeat"
-          >
-            <Repeat size={18} />
-
-            {repeatMode === 'one' && (
-              <span className="repeat-one-dot">
-                1
-              </span>
-            )}
-          </button>
-
-          <AddToPlaylistButton
-            song={currentSong}
-            openUpward={true}
-          />
-        </div>
-
-        <div className="progress-row">
-          <span className="time-label">
-            {formatTime(currentTime)}
-          </span>
-
-          <input
-            type="range"
-            min="0"
-            max={duration || 0}
-            value={Math.min(
-              currentTime,
-              duration || 0
-            )}
-            onChange={handleSeek}
-            className="progress-bar"
-            style={{
-              background: `linear-gradient(
-                to right,
-                #1db954 ${progressPercentage}%,
-                #4d4d4d ${progressPercentage}%
-              )`,
-            }}
-          />
-
-          <span className="time-label">
-            {formatTime(duration)}
-          </span>
-        </div>
-
-        {playerError && (
-          <p className="player-error">
-            {playerError}
-          </p>
-        )}
-      </div>
-
-      <div className="player-right">
-        <Volume2 size={18} />
-
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.01"
-          value={volume}
-          onChange={handleVolumeChange}
-          className="volume-bar"
-          style={{
-            background: `linear-gradient(
-              to right,
-              #1db954 ${volume * 100}%,
-              #4d4d4d ${volume * 100}%
-            )`,
-          }}
-        />
-      </div>
-    </div>
-  );
-}
+/* =========================================================
+   APP
+========================================================= */
 
 function App() {
   return (

@@ -3,12 +3,14 @@ import React, {
   useRef,
   useEffect,
 } from 'react';
+
 import {
   Plus,
   Check,
   Heart,
   X,
 } from 'lucide-react';
+
 import { useLibrary } from '../LibraryContext';
 
 function AddToPlaylistButton({
@@ -25,8 +27,7 @@ function AddToPlaylistButton({
   } = useLibrary();
 
   const [open, setOpen] = useState(false);
-  const [newName, setNewName] =
-    useState('');
+  const [newName, setNewName] = useState('');
 
   const menuRef = useRef(null);
   const inputRef = useRef(null);
@@ -36,6 +37,10 @@ function AddToPlaylistButton({
   const liked = songId
     ? isLiked(songId)
     : false;
+
+  /* =====================================================
+     CLOSE WHEN CLICKING OUTSIDE
+  ===================================================== */
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -60,6 +65,10 @@ function AddToPlaylistButton({
     };
   }, []);
 
+  /* =====================================================
+     FOCUS INPUT WHEN MENU OPENS
+  ===================================================== */
+
   useEffect(() => {
     if (open) {
       setTimeout(() => {
@@ -67,6 +76,10 @@ function AddToPlaylistButton({
       }, 0);
     }
   }, [open]);
+
+  /* =====================================================
+     LIKE
+  ===================================================== */
 
   const handleLike = (event) => {
     event.stopPropagation();
@@ -76,6 +89,10 @@ function AddToPlaylistButton({
     toggleLike(song);
   };
 
+  /* =====================================================
+     TOGGLE PLAYLIST MENU
+  ===================================================== */
+
   const handleToggleMenu = (event) => {
     event.stopPropagation();
 
@@ -84,11 +101,19 @@ function AddToPlaylistButton({
     setOpen((previous) => !previous);
   };
 
+  /* =====================================================
+     CHECK PLAYLIST
+  ===================================================== */
+
   const isSongInPlaylist = (playlist) => {
     return playlist.songs?.some(
       (item) => item.id === songId
     );
   };
+
+  /* =====================================================
+     ADD TO PLAYLIST
+  ===================================================== */
 
   const handleAdd = (
     event,
@@ -102,10 +127,11 @@ function AddToPlaylistButton({
       playlistId,
       song
     );
-
-    // Keep the menu open so the user can
-    // add the song to multiple playlists.
   };
+
+  /* =====================================================
+     CREATE PLAYLIST
+  ===================================================== */
 
   const handleCreateAndAdd = (event) => {
     event.stopPropagation();
@@ -126,6 +152,10 @@ function AddToPlaylistButton({
     setOpen(false);
   };
 
+  /* =====================================================
+     INPUT KEYBOARD
+  ===================================================== */
+
   const handleInputKeyDown = (event) => {
     if (event.key === 'Enter') {
       event.preventDefault();
@@ -145,15 +175,45 @@ function AddToPlaylistButton({
 
   return (
     <div
-      className="add-to-playlist-wrapper"
       ref={menuRef}
+      className="
+        relative
+        flex
+        shrink-0
+        items-center
+        gap-1
+      "
     >
-      {/* LIKE BUTTON */}
+      {/* =================================================
+          LIKE BUTTON
+      ================================================= */}
 
       <button
-        className={`icon-btn like-btn ${
-          liked ? 'active' : ''
-        }`}
+        type="button"
+        className={`
+          relative
+          flex
+          h-9
+          w-9
+          shrink-0
+          items-center
+          justify-center
+          rounded-full
+          bg-transparent
+          p-0
+          text-center
+          transition-all
+          duration-200
+          ease-out
+          hover:bg-[#2a2a2a]
+          hover:text-white
+          active:scale-95
+          ${
+            liked
+              ? 'text-[#1db954]'
+              : 'text-[#b3b3b3]'
+          }
+        `}
         onClick={handleLike}
         title={
           liked
@@ -176,12 +236,36 @@ function AddToPlaylistButton({
         />
       </button>
 
-      {/* PLAYLIST MENU BUTTON */}
+      {/* =================================================
+          PLAYLIST MENU BUTTON
+      ================================================= */}
 
       <button
-        className={`icon-btn ${
-          open ? 'active' : ''
-        }`}
+        type="button"
+        className={`
+          relative
+          flex
+          h-9
+          w-9
+          shrink-0
+          items-center
+          justify-center
+          rounded-full
+          bg-transparent
+          p-0
+          text-center
+          transition-all
+          duration-200
+          ease-out
+          hover:bg-[#2a2a2a]
+          hover:text-white
+          active:scale-95
+          ${
+            open
+              ? 'text-[#1db954]'
+              : 'text-[#b3b3b3]'
+          }
+        `}
         onClick={handleToggleMenu}
         title="Add to playlist"
         aria-label="Add to playlist"
@@ -194,84 +278,184 @@ function AddToPlaylistButton({
         )}
       </button>
 
-      {/* DROPDOWN */}
+      {/* =================================================
+          DROPDOWN
+      ================================================= */}
 
       {open && (
         <div
-          className={`playlist-dropdown ${
-            openUpward
-              ? 'open-upward'
-              : ''
-          }`}
+          className={`
+            absolute
+            right-0
+            z-[1000]
+
+            w-[min(230px,calc(100vw-24px))]
+
+            rounded-[10px]
+            border
+            border-[#333]
+            bg-[#282828]
+            p-2.5
+
+            shadow-[0_12px_35px_rgba(0,0,0,0.6)]
+
+            ${
+              openUpward
+                ? 'bottom-[calc(100%+8px)]'
+                : 'top-[calc(100%+8px)]'
+            }
+          `}
           onClick={(event) =>
             event.stopPropagation()
           }
         >
-          <p className="dropdown-title">
+          {/* Dropdown Title */}
+
+          <p
+            className="
+              m-0
+              mb-2
+              px-1
+              text-[11px]
+              font-semibold
+              uppercase
+              text-[#aaa]
+            "
+          >
             Add to playlist
           </p>
 
+          {/* =================================================
+              PLAYLIST LIST
+          ================================================= */}
+
           {!libraryLoaded ? (
-            <p className="dropdown-empty">
+            <p
+              className="
+                m-2
+                text-[13px]
+                text-[#888]
+              "
+            >
               Loading playlists...
             </p>
           ) : (
             <>
               {playlists.length === 0 && (
-                <p className="dropdown-empty">
+                <p
+                  className="
+                    m-2
+                    text-[13px]
+                    text-[#888]
+                  "
+                >
                   No playlists yet
                 </p>
               )}
 
-              {playlists.map(
-                (playlist) => {
-                  const alreadyAdded =
-                    isSongInPlaylist(
-                      playlist
+              <div
+                className="
+                  max-h-48
+                  overflow-y-auto
+                  overscroll-contain
+                  pr-0.5
+                "
+              >
+                {playlists.map(
+                  (playlist) => {
+                    const alreadyAdded =
+                      isSongInPlaylist(
+                        playlist
+                      );
+
+                    return (
+                      <button
+                        key={playlist.id}
+                        type="button"
+                        className={`
+                          flex
+                          min-h-10
+                          w-full
+                          items-center
+                          justify-between
+                          gap-2.5
+                          rounded-md
+                          bg-transparent
+                          px-2
+                          py-2
+                          text-left
+                          text-[13px]
+                          text-white
+                          transition-colors
+                          duration-200
+                          hover:bg-[#3a3a3a]
+                          active:bg-[#444]
+                          ${
+                            alreadyAdded
+                              ? 'text-[#1db954]'
+                              : ''
+                          }
+                        `}
+                        onClick={(event) =>
+                          handleAdd(
+                            event,
+                            playlist.id
+                          )
+                        }
+                        title={
+                          alreadyAdded
+                            ? 'Song is already in this playlist'
+                            : `Add to ${playlist.name}`
+                        }
+                      >
+                        <span
+                          className="
+                            min-w-0
+                            flex-1
+                            overflow-hidden
+                            text-ellipsis
+                            whitespace-nowrap
+                          "
+                        >
+                          {playlist.name}
+                        </span>
+
+                        {alreadyAdded && (
+                          <Check
+                            size={16}
+                            className="shrink-0"
+                          />
+                        )}
+                      </button>
                     );
-
-                  return (
-                    <button
-                      key={playlist.id}
-                      type="button"
-                      className={`dropdown-item ${
-                        alreadyAdded
-                          ? 'added'
-                          : ''
-                      }`}
-                      onClick={(event) =>
-                        handleAdd(
-                          event,
-                          playlist.id
-                        )
-                      }
-                      title={
-                        alreadyAdded
-                          ? 'Song is already in this playlist'
-                          : `Add to ${playlist.name}`
-                      }
-                    >
-                      <span>
-                        {playlist.name}
-                      </span>
-
-                      {alreadyAdded && (
-                        <Check
-                          size={16}
-                        />
-                      )}
-                    </button>
-                  );
-                }
-              )}
+                  }
+                )}
+              </div>
             </>
           )}
 
-          <div className="dropdown-divider" />
+          {/* =================================================
+              DIVIDER
+          ================================================= */}
 
-          {/* CREATE NEW PLAYLIST */}
+          <div
+            className="
+              my-2
+              h-px
+              bg-[#444]
+            "
+          />
 
-          <div className="dropdown-create">
+          {/* =================================================
+              CREATE NEW PLAYLIST
+          ================================================= */}
+
+          <div
+            className="
+              flex
+              gap-1.5
+            "
+          >
             <input
               ref={inputRef}
               type="text"
@@ -290,6 +474,21 @@ function AddToPlaylistButton({
                 event.stopPropagation()
               }
               aria-label="New playlist name"
+              className="
+                min-w-0
+                flex-1
+                rounded-md
+                bg-[#1a1a1a]
+                px-2
+                py-2
+                text-xs
+                text-white
+                outline-none
+                placeholder:text-[#777]
+                focus:bg-[#202020]
+                focus:ring-1
+                focus:ring-[#1db954]/40
+              "
             />
 
             <button
@@ -302,6 +501,24 @@ function AddToPlaylistButton({
               }
               title="Create playlist"
               aria-label="Create playlist"
+              className="
+                flex
+                h-[34px]
+                w-[34px]
+                shrink-0
+                items-center
+                justify-center
+                rounded-md
+                bg-[#1db954]
+                p-0
+                text-black
+                transition-all
+                duration-200
+                hover:bg-[#1ed760]
+                active:scale-95
+                disabled:cursor-not-allowed
+                disabled:opacity-35
+              "
             >
               <Plus size={18} />
             </button>

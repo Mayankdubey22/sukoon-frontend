@@ -1,20 +1,101 @@
 import React from 'react';
 
+/* =========================================================
+   SKELETON CARD
+========================================================= */
+
 export function SkeletonCard() {
   return (
-    <div className="skeleton-card">
-      <div className="skeleton-img shimmer"></div>
-      <div className="skeleton-line shimmer" style={{ width: '80%' }}></div>
-      <div className="skeleton-line shimmer" style={{ width: '50%' }}></div>
+    <div className="w-full">
+      {/* =================================================
+          SKELETON IMAGE
+      ================================================= */}
+
+      <div
+        className="
+          aspect-square
+          w-full
+          rounded-xl
+          bg-zinc-800
+          animate-pulse
+        "
+      />
+
+      {/* =================================================
+          SKELETON TITLE
+      ================================================= */}
+
+      <div
+        className="
+          mt-3
+          h-4
+          w-[80%]
+          rounded-md
+          bg-zinc-800
+          animate-pulse
+        "
+      />
+
+      {/* =================================================
+          SKELETON SUBTITLE
+      ================================================= */}
+
+      <div
+        className="
+          mt-2
+          h-3
+          w-[50%]
+          rounded-md
+          bg-zinc-800
+          animate-pulse
+        "
+      />
     </div>
   );
 }
 
-export function SkeletonRow({ count = 5 }) {
+/* =========================================================
+   SKELETON ROW
+========================================================= */
+
+export function SkeletonRow({
+  count = 5,
+}) {
   return (
-    <div className="carousel-track" style={{ overflow: 'hidden' }}>
-      {Array.from({ length: count }).map((_, i) => (
-        <div key={i} style={{ flex: `0 0 calc((100% - 4 * 20px) / 4.5)` }}>
+    <div
+      className="
+        flex
+        w-full
+        gap-5
+        overflow-hidden
+      "
+    >
+      {Array.from({
+        length: count,
+      }).map((_, i) => (
+        <div
+          key={i}
+          className="
+            shrink-0
+
+            /* PHONE
+               Show roughly 1.3 cards */
+            w-[70%]
+
+            /* SMALL TABLET */
+            sm:w-[42%]
+
+            /* TABLET / SMALL LAPTOP */
+            md:w-[30%]
+
+            /* LAPTOP / DESKTOP
+               Roughly 4 cards visible */
+            lg:w-[22%]
+
+            /* LARGE DESKTOP */
+            xl:w-[21%]
+          "
+        >
           <SkeletonCard />
         </div>
       ))}
