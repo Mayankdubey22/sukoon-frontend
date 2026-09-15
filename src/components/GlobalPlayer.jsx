@@ -110,6 +110,39 @@ function GlobalPlayer({
   }, [isMobilePlayerOpen]);
 
   /* -------------------------------------------------------
+     HANDLE ANDROID / BROWSER BACK BUTTON
+  ------------------------------------------------------- */
+
+  useEffect(() => {
+    if (!isMobilePlayerOpen) {
+      return;
+    }
+
+    // Add a history entry so Android's system Back button
+    // closes the full-screen player instead of leaving the page.
+    window.history.pushState(
+      { sukoonMobilePlayer: true },
+      ''
+    );
+
+    const handlePopState = () => {
+      setIsMobilePlayerOpen(false);
+    };
+
+    window.addEventListener(
+      'popstate',
+      handlePopState
+    );
+
+    return () => {
+      window.removeEventListener(
+        'popstate',
+        handlePopState
+      );
+    };
+  }, [isMobilePlayerOpen]);
+
+  /* -------------------------------------------------------
      LOAD CURRENT SONG
   ------------------------------------------------------- */
 
@@ -726,11 +759,13 @@ function GlobalPlayer({
           >
             <button
               type="button"
-              onClick={() =>
-                setIsMobilePlayerOpen(
-                  false
-                )
-              }
+              onClick={() => {
+                if (window.history.state?.sukoonMobilePlayer) {
+                  window.history.back();
+                } else {
+                  setIsMobilePlayerOpen(false);
+                }
+              }}
               className="
                 flex
                 h-10
