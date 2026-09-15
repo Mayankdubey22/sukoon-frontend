@@ -62,21 +62,6 @@ function GlobalPlayer({
     setIsMobilePlayerOpen,
   ] = useState(false);
 
-  const mobilePlayerHistoryRef =
-    useRef(false);
-
-  const artworkTouchStartRef =
-    useRef({
-      x: 0,
-      y: 0,
-    });
-
-  const playerTouchStartRef =
-    useRef({
-      x: 0,
-      y: 0,
-    });
-
   const audioRef =
     useRef(null);
 
@@ -103,6 +88,64 @@ function GlobalPlayer({
     setVolume,
   ] = useState(1);
 
+  const [
+    miniSwipeX,
+    setMiniSwipeX,
+  ] = useState(0);
+
+  const [
+    miniSwipeAnimating,
+    setMiniSwipeAnimating,
+  ] = useState(false);
+
+  const [
+    artworkSwipeX,
+    setArtworkSwipeX,
+  ] = useState(0);
+
+  const [
+    artworkSwipeAnimating,
+    setArtworkSwipeAnimating,
+  ] = useState(false);
+
+  const [
+    mobilePlayerDragY,
+    setMobilePlayerDragY,
+  ] = useState(0);
+
+  const [
+    mobilePlayerDragging,
+    setMobilePlayerDragging,
+  ] = useState(false);
+
+  const miniSwipeRef = useRef({
+    startX: 0,
+    startY: 0,
+    dragging: false,
+    swiped: false,
+    width: 1,
+  });
+
+  const artworkSwipeRef = useRef({
+    startX: 0,
+    startY: 0,
+    dragging: false,
+    swiped: false,
+    width: 1,
+  });
+
+  const playerDragRef = useRef({
+    startX: 0,
+    startY: 0,
+    dragging: false,
+    width: 1,
+  });
+
+  const miniViewportRef = useRef(null);
+  const artworkViewportRef = useRef(null);
+  const mobilePlayerContentRef = useRef(null);
+  const mobileHistoryPushedRef = useRef(false);
+
   /* -------------------------------------------------------
      LOCK BODY SCROLL WHEN MOBILE PLAYER IS OPEN
   ------------------------------------------------------- */
@@ -125,7 +168,7 @@ function GlobalPlayer({
   }, [isMobilePlayerOpen]);
 
   /* -------------------------------------------------------
-     MOBILE PLAYER HISTORY / ANDROID BACK
+     ANDROID / BROWSER BACK BUTTON
   ------------------------------------------------------- */
 
   useEffect(() => {
@@ -134,19 +177,15 @@ function GlobalPlayer({
     }
 
     window.history.pushState(
-      {
-        ...(window.history.state || {}),
-        sukoonMobilePlayer: true,
-      },
-      ''
+      { sukoonMobilePlayer: true },
+      '',
+      window.location.href
     );
 
-    mobilePlayerHistoryRef.current = true;
+    mobileHistoryPushedRef.current = true;
 
     const handlePopState = () => {
-      mobilePlayerHistoryRef.current =
-        false;
-
+      mobileHistoryPushedRef.current = false;
       setIsMobilePlayerOpen(false);
     };
 
@@ -162,125 +201,6 @@ function GlobalPlayer({
       );
     };
   }, [isMobilePlayerOpen]);
-
-  /* -------------------------------------------------------
-     CLOSE MOBILE PLAYER
-     ------------------------------------------------------- */
-
-  const closeMobilePlayer = () => {
-    if (
-      mobilePlayerHistoryRef.current &&
-      window.history.state?.sukoonMobilePlayer
-    ) {
-      window.history.back();
-      return;
-    }
-
-    setIsMobilePlayerOpen(false);
-  };
-
-  /* -------------------------------------------------------
-     MOBILE SWIPE GESTURES
-  ------------------------------------------------------- */
-
-  const handleArtworkTouchStart = (event) => {
-    const touch =
-      event.touches?.[0];
-
-    if (!touch) {
-      return;
-    }
-
-    artworkTouchStartRef.current = {
-      x: touch.clientX,
-      y: touch.clientY,
-    };
-  };
-
-  const handleArtworkTouchEnd = async (event) => {
-    const touch =
-      event.changedTouches?.[0];
-
-    if (!touch) {
-      return;
-    }
-
-    const start =
-      artworkTouchStartRef.current;
-
-    const deltaX =
-      touch.clientX - start.x;
-
-    const deltaY =
-      touch.clientY - start.y;
-
-    const horizontalSwipe =
-      Math.abs(deltaX) >= 60 &&
-      Math.abs(deltaX) >
-        Math.abs(deltaY) * 1.2;
-
-    if (!horizontalSwipe) {
-      return;
-    }
-
-    if (deltaX < 0) {
-      if (!disableNext) {
-        await playNext();
-      }
-    } else if (!disablePrevious) {
-      await playPrevious();
-    }
-  };
-
-  const handlePlayerTouchStart = (event) => {
-    const touch =
-      event.touches?.[0];
-
-    if (!touch) {
-      return;
-    }
-
-    playerTouchStartRef.current = {
-      x: touch.clientX,
-      y: touch.clientY,
-    };
-  };
-
-  const handlePlayerTouchEnd = (event) => {
-    const touch =
-      event.changedTouches?.[0];
-
-    if (!touch) {
-      return;
-    }
-
-    const start =
-      playerTouchStartRef.current;
-
-    const deltaX =
-      touch.clientX - start.x;
-
-    const deltaY =
-      touch.clientY - start.y;
-
-    const verticalSwipe =
-      Math.abs(deltaY) >= 80 &&
-      Math.abs(deltaY) >
-        Math.abs(deltaX) * 1.2;
-
-    if (!verticalSwipe || deltaY <= 0) {
-      return;
-    }
-
-    const contentElement =
-      event.currentTarget;
-
-    if (
-      contentElement.scrollTop <= 2
-    ) {
-      closeMobilePlayer();
-    }
-  };
 
   /* -------------------------------------------------------
      LOAD CURRENT SONG
@@ -650,6 +570,340 @@ function GlobalPlayer({
     sm:w-9
   `;
 
+  /* -------------------------------------------------------
+     MOBILE GESTURES
+  ------------------------------------------------------- */
+
+  const closeMobilePlayer = () => {
+    if (mobileHistoryPushedRef.current) {
+      window.history.back();
+      return;
+    }
+
+    setIsMobilePlayerOpen(false);
+  };
+
+  const getSongImage = (song) =>
+    song?.image?.[1]?.url ||
+    song?.image?.[0]?.url ||
+    '';
+
+  const getSongName = (song) =>
+    song?.name ||
+    song?.title ||
+    'Unknown song';
+
+  const getArtistName = (song) =>
+    song?.artists?.primary
+      ?.map((artist) => artist.name)
+      .join(', ') ||
+    song?.primaryArtists ||
+    '';
+
+  const getAdjacentSong = (direction) => {
+    if (currentIndex < 0 || safeQueue.length === 0) {
+      return null;
+    }
+
+    const targetIndex =
+      currentIndex + direction;
+
+    if (targetIndex < 0 || targetIndex >= safeQueue.length) {
+      return null;
+    }
+
+    return safeQueue[targetIndex] || null;
+  };
+
+  const finishMiniSwipe = async (direction) => {
+    const targetSong =
+      getAdjacentSong(direction);
+
+    if (!targetSong) {
+      setMiniSwipeAnimating(true);
+      setMiniSwipeX(0);
+      window.setTimeout(() => {
+        setMiniSwipeAnimating(false);
+      }, 280);
+      return;
+    }
+
+    const width =
+      miniSwipeRef.current.width || 1;
+
+    setMiniSwipeAnimating(true);
+    setMiniSwipeX(
+      direction < 0 ? -width : width
+    );
+
+    window.setTimeout(async () => {
+      if (direction < 0) {
+        await playNext();
+      } else {
+        await playPrevious();
+      }
+
+      setMiniSwipeAnimating(false);
+      setMiniSwipeX(0);
+    }, 280);
+  };
+
+  const handleMiniTouchStart = (event) => {
+    if (!event.touches?.[0]) return;
+
+    const width =
+      miniViewportRef.current?.clientWidth || 1;
+
+    miniSwipeRef.current = {
+      startX: event.touches[0].clientX,
+      startY: event.touches[0].clientY,
+      dragging: true,
+      swiped: false,
+      width,
+    };
+
+    setMiniSwipeAnimating(false);
+    setMiniSwipeX(0);
+  };
+
+  const handleMiniTouchMove = (event) => {
+    const gesture = miniSwipeRef.current;
+    if (!gesture.dragging || !event.touches?.[0]) return;
+
+    const dx =
+      event.touches[0].clientX - gesture.startX;
+    const dy =
+      event.touches[0].clientY - gesture.startY;
+
+    if (Math.abs(dy) > Math.abs(dx) * 1.15) {
+      gesture.dragging = false;
+      setMiniSwipeX(0);
+      return;
+    }
+
+    if (Math.abs(dx) > 8) {
+      gesture.swiped = true;
+    }
+
+    const resistance =
+      getAdjacentSong(dx < 0 ? -1 : 1) ? 1 : 0.28;
+
+    setMiniSwipeX(
+      Math.max(
+        -gesture.width * 0.92,
+        Math.min(gesture.width * 0.92, dx * resistance)
+      )
+    );
+  };
+
+  const handleMiniTouchEnd = async () => {
+    const gesture = miniSwipeRef.current;
+    if (!gesture.dragging) return;
+
+    gesture.dragging = false;
+
+    const threshold =
+      Math.min(gesture.width * 0.24, 90);
+
+    if (Math.abs(miniSwipeX) >= threshold) {
+      await finishMiniSwipe(
+        miniSwipeX < 0 ? -1 : 1
+      );
+    } else {
+      setMiniSwipeAnimating(true);
+      setMiniSwipeX(0);
+      window.setTimeout(() => {
+        setMiniSwipeAnimating(false);
+      }, 280);
+    }
+  };
+
+  const handleMiniClick = (event) => {
+    if (miniSwipeRef.current.swiped) {
+      miniSwipeRef.current.swiped = false;
+      return;
+    }
+
+    setIsMobilePlayerOpen(true);
+  };
+
+  const finishArtworkSwipe = async (direction) => {
+    const targetSong =
+      getAdjacentSong(direction);
+
+    if (!targetSong) {
+      setArtworkSwipeAnimating(true);
+      setArtworkSwipeX(0);
+      window.setTimeout(() => {
+        setArtworkSwipeAnimating(false);
+      }, 320);
+      return;
+    }
+
+    const width =
+      artworkSwipeRef.current.width || 1;
+
+    setArtworkSwipeAnimating(true);
+    setArtworkSwipeX(
+      direction < 0 ? -width : width
+    );
+
+    window.setTimeout(async () => {
+      if (direction < 0) {
+        await playNext();
+      } else {
+        await playPrevious();
+      }
+
+      setArtworkSwipeAnimating(false);
+      setArtworkSwipeX(0);
+    }, 320);
+  };
+
+  const handleArtworkTouchStart = (event) => {
+    if (!event.touches?.[0]) return;
+
+    const width =
+      artworkViewportRef.current?.clientWidth || 1;
+
+    artworkSwipeRef.current = {
+      startX: event.touches[0].clientX,
+      startY: event.touches[0].clientY,
+      dragging: true,
+      swiped: false,
+      width,
+    };
+
+    setArtworkSwipeAnimating(false);
+    setArtworkSwipeX(0);
+  };
+
+  const handleArtworkTouchMove = (event) => {
+    const gesture = artworkSwipeRef.current;
+    if (!gesture.dragging || !event.touches?.[0]) return;
+
+    const dx =
+      event.touches[0].clientX - gesture.startX;
+    const dy =
+      event.touches[0].clientY - gesture.startY;
+
+    if (Math.abs(dy) > Math.abs(dx) * 1.1) {
+      gesture.dragging = false;
+      setArtworkSwipeX(0);
+      return;
+    }
+
+    if (Math.abs(dx) > 8) {
+      gesture.swiped = true;
+    }
+
+    const resistance =
+      getAdjacentSong(dx < 0 ? -1 : 1) ? 1 : 0.28;
+
+    setArtworkSwipeX(
+      Math.max(
+        -gesture.width * 0.95,
+        Math.min(gesture.width * 0.95, dx * resistance)
+      )
+    );
+  };
+
+  const handleArtworkTouchEnd = async () => {
+    const gesture = artworkSwipeRef.current;
+    if (!gesture.dragging) return;
+
+    gesture.dragging = false;
+
+    const threshold =
+      Math.min(gesture.width * 0.22, 100);
+
+    if (Math.abs(artworkSwipeX) >= threshold) {
+      await finishArtworkSwipe(
+        artworkSwipeX < 0 ? -1 : 1
+      );
+    } else {
+      setArtworkSwipeAnimating(true);
+      setArtworkSwipeX(0);
+      window.setTimeout(() => {
+        setArtworkSwipeAnimating(false);
+      }, 320);
+    }
+  };
+
+  const handlePlayerTouchStart = (event) => {
+    if (!event.touches?.[0]) return;
+
+    playerDragRef.current = {
+      startX: event.touches[0].clientX,
+      startY: event.touches[0].clientY,
+      dragging: true,
+      width: window.innerHeight || 1,
+    };
+
+    setMobilePlayerDragging(false);
+    setMobilePlayerDragY(0);
+  };
+
+  const handlePlayerTouchMove = (event) => {
+    const gesture = playerDragRef.current;
+    if (!gesture.dragging || !event.touches?.[0]) return;
+
+    const dx =
+      event.touches[0].clientX - gesture.startX;
+    const dy =
+      event.touches[0].clientY - gesture.startY;
+
+    if (dy <= 0 || Math.abs(dy) < Math.abs(dx) * 1.15) {
+      return;
+    }
+
+    const content =
+      mobilePlayerContentRef.current;
+
+    if (content && content.scrollTop > 4) {
+      gesture.dragging = false;
+      return;
+    }
+
+    gesture.dragging = true;
+    setMobilePlayerDragging(true);
+
+    const resistance = 0.9;
+    const maxDrag = gesture.width * 0.96;
+
+    setMobilePlayerDragY(
+      Math.min(maxDrag, dy * resistance)
+    );
+  };
+
+  const handlePlayerTouchEnd = () => {
+    const gesture = playerDragRef.current;
+    if (!gesture.dragging) return;
+
+    gesture.dragging = false;
+
+    const threshold =
+      Math.max(180, gesture.width * 0.5);
+
+    if (mobilePlayerDragY >= threshold) {
+      setMobilePlayerDragging(true);
+      setMobilePlayerDragY(gesture.width);
+
+      window.setTimeout(() => {
+        closeMobilePlayer();
+        setMobilePlayerDragging(false);
+        setMobilePlayerDragY(0);
+      }, 300);
+    } else {
+      setMobilePlayerDragging(true);
+      setMobilePlayerDragY(0);
+
+      window.setTimeout(() => {
+        setMobilePlayerDragging(false);
+      }, 300);
+    }
+  };
+
   /* =======================================================
      PLAYER UI
   ======================================================= */
@@ -678,191 +932,169 @@ function GlobalPlayer({
       =================================================== */}
 
       <div
+        ref={miniViewportRef}
         className="
           fixed
           inset-x-0
           bottom-[68px]
           z-[65]
+          overflow-hidden
           px-2
           md:hidden
+          touch-pan-y
         "
+        onTouchStart={handleMiniTouchStart}
+        onTouchMove={handleMiniTouchMove}
+        onTouchEnd={handleMiniTouchEnd}
+        onTouchCancel={handleMiniTouchEnd}
       >
         <div
           className="
             flex
-            h-[58px]
-            w-full
-            items-center
-            gap-2
-            rounded-xl
-            border
-            border-white/10
-            bg-[#202020]/95
-            px-2
-            shadow-[0_8px_30px_rgba(0,0,0,0.45)]
-            backdrop-blur-xl
+            w-[300%]
           "
-          onClick={() =>
-            setIsMobilePlayerOpen(true)
-          }
+          style={{
+            transform: `translateX(calc(-33.333333% + ${miniSwipeX}px))`,
+            transition: miniSwipeAnimating
+              ? 'transform 280ms cubic-bezier(0.22, 1, 0.36, 1)'
+              : 'none',
+          }}
         >
-          {/* ARTWORK */}
+          {[
+            getAdjacentSong(-1),
+            currentSong,
+            getAdjacentSong(1),
+          ].map((song, cardIndex) => {
+            const isCurrent = cardIndex === 1;
+            const image = getSongImage(song);
+            const name = getSongName(song);
+            const artist = getArtistName(song);
 
-          <div
-            className="
-              h-11
-              w-11
-              shrink-0
-              overflow-hidden
-              rounded-md
-              bg-[#282828]
-              shadow-md
-            "
-          >
-            {songImage ? (
-              <img
-                src={songImage}
-                alt={decodeHtml(
-                  songName
-                )}
-                className="
-                  h-full
-                  w-full
-                  object-cover
-                "
-              />
-            ) : (
+            return (
               <div
-                className="
-                  flex
-                  h-full
-                  w-full
-                  items-center
-                  justify-center
-                  text-lg
-                "
+                key={`${song?.id || 'empty'}-${cardIndex}`}
+                className="w-1/3 shrink-0 px-0"
               >
-                🎵
+                <div
+                  className="
+                    flex
+                    h-[58px]
+                    w-full
+                    items-center
+                    gap-2
+                    rounded-xl
+                    border
+                    border-white/10
+                    bg-[#202020]/95
+                    px-2
+                    shadow-[0_8px_30px_rgba(0,0,0,0.45)]
+                    backdrop-blur-xl
+                  "
+                  onClick={
+                    isCurrent
+                      ? handleMiniClick
+                      : async () => {
+                          if (song?.id) {
+                            const index = safeQueue.findIndex(
+                              (item) => item?.id === song.id
+                            );
+
+                            if (index >= 0) {
+                              await playQueue(safeQueue, index);
+                            }
+                          }
+                        }
+                  }
+                >
+                  <div
+                    className="
+                      h-11
+                      w-11
+                      shrink-0
+                      overflow-hidden
+                      rounded-md
+                      bg-[#282828]
+                      shadow-md
+                    "
+                  >
+                    {image ? (
+                      <img
+                        src={image}
+                        alt={decodeHtml(name)}
+                        className="h-full w-full object-cover"
+                        draggable="false"
+                      />
+                    ) : (
+                      <div
+                        className="flex h-full w-full items-center justify-center text-lg"
+                      >
+                        🎵
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-semibold text-white">
+                      {decodeHtml(name)}
+                    </p>
+                    <p className="mt-0.5 truncate text-[11px] text-white/50">
+                      {decodeHtml(artist)}
+                    </p>
+                  </div>
+
+                  {isCurrent && (
+                    <>
+                      <button
+                        type="button"
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white/70 transition active:scale-90"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleLike(currentSong);
+                        }}
+                        aria-label={
+                          currentSongLiked
+                            ? 'Unlike song'
+                            : 'Like song'
+                        }
+                      >
+                        <Heart
+                          size={18}
+                          fill={
+                            currentSongLiked
+                              ? 'currentColor'
+                              : 'none'
+                          }
+                          className={
+                            currentSongLiked
+                              ? 'text-[#1db954]'
+                              : ''
+                          }
+                        />
+                      </button>
+
+                      <button
+                        type="button"
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-black shadow-md transition active:scale-90"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          togglePlay();
+                        }}
+                        aria-label={
+                          isPlaying ? 'Pause' : 'Play'
+                        }
+                      >
+                        {isPlaying ? (
+                          <Pause size={16} fill="black" />
+                        ) : (
+                          <Play size={16} fill="black" />
+                        )}
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
-            )}
-          </div>
-
-          {/* SONG INFO */}
-
-          <div
-            className="
-              min-w-0
-              flex-1
-            "
-          >
-            <p
-              className="
-                truncate
-                text-xs
-                font-semibold
-                text-white
-              "
-            >
-              {decodeHtml(
-                songName
-              )}
-            </p>
-
-            <p
-              className="
-                mt-0.5
-                truncate
-                text-[11px]
-                text-white/50
-              "
-            >
-              {decodeHtml(
-                artistName
-              )}
-            </p>
-          </div>
-
-          {/* LIKE */}
-
-          <button
-            type="button"
-            className="
-              flex
-              h-9
-              w-9
-              shrink-0
-              items-center
-              justify-center
-              rounded-full
-              text-white/70
-              transition
-              active:scale-90
-            "
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleLike(currentSong);
-            }}
-            aria-label={
-              currentSongLiked
-                ? 'Unlike song'
-                : 'Like song'
-            }
-          >
-            <Heart
-              size={18}
-              fill={
-                currentSongLiked
-                  ? 'currentColor'
-                  : 'none'
-              }
-              className={
-                currentSongLiked
-                  ? 'text-[#1db954]'
-                  : ''
-              }
-            />
-          </button>
-
-          {/* PLAY / PAUSE */}
-
-          <button
-            type="button"
-            className="
-              flex
-              h-9
-              w-9
-              shrink-0
-              items-center
-              justify-center
-              rounded-full
-              bg-white
-              text-black
-              shadow-md
-              transition
-              active:scale-90
-            "
-            onClick={(e) => {
-              e.stopPropagation();
-              togglePlay();
-            }}
-            aria-label={
-              isPlaying
-                ? 'Pause'
-                : 'Play'
-            }
-          >
-            {isPlaying ? (
-              <Pause
-                size={16}
-                fill="black"
-              />
-            ) : (
-              <Play
-                size={16}
-                fill="black"
-              />
-            )}
-          </button>
+            );
+          })}
         </div>
       </div>
 
@@ -882,7 +1114,19 @@ function GlobalPlayer({
             bg-[#121212]
             text-white
             md:hidden
+            touch-pan-y
           "
+          onTouchStart={handlePlayerTouchStart}
+          onTouchMove={handlePlayerTouchMove}
+          onTouchEnd={handlePlayerTouchEnd}
+          onTouchCancel={handlePlayerTouchEnd}
+          style={{
+            transform: `translateY(${mobilePlayerDragY}px)`,
+            transition: mobilePlayerDragging
+              ? 'transform 300ms cubic-bezier(0.22, 1, 0.36, 1)'
+              : 'none',
+            borderRadius: mobilePlayerDragY > 0 ? '0 0 24px 24px' : undefined,
+          }}
         >
           {/* TOP BAR */}
 
@@ -969,6 +1213,7 @@ function GlobalPlayer({
           {/* SCROLLABLE PLAYER CONTENT */}
 
           <div
+            ref={mobilePlayerContentRef}
             className="
               min-h-0
               flex-1
@@ -976,14 +1221,13 @@ function GlobalPlayer({
               overscroll-contain
               px-5
               pb-10
-              [touch-action:pan-y]
+              touch-pan-y
             "
-            onTouchStart={handlePlayerTouchStart}
-            onTouchEnd={handlePlayerTouchEnd}
           >
             {/* ARTWORK */}
 
             <div
+              ref={artworkViewportRef}
               className="
                 mx-auto
                 mt-4
@@ -995,37 +1239,51 @@ function GlobalPlayer({
                 bg-[#282828]
                 shadow-[0_20px_60px_rgba(0,0,0,0.45)]
                 sm:mt-8
-                [touch-action:pan-y]
+                touch-pan-y
               "
               onTouchStart={handleArtworkTouchStart}
+              onTouchMove={handleArtworkTouchMove}
               onTouchEnd={handleArtworkTouchEnd}
+              onTouchCancel={handleArtworkTouchEnd}
             >
-              {songImage ? (
-                <img
-                  src={songImage}
-                  alt={decodeHtml(
-                    songName
-                  )}
-                  className="
-                    h-full
-                    w-full
-                    object-cover
-                  "
-                />
-              ) : (
-                <div
-                  className="
-                    flex
-                    h-full
-                    w-full
-                    items-center
-                    justify-center
-                    text-6xl
-                  "
-                >
-                  🎵
-                </div>
-              )}
+              <div
+                className="flex h-full w-[300%]"
+                style={{
+                  transform: `translateX(calc(-33.333333% + ${artworkSwipeX}px))`,
+                  transition: artworkSwipeAnimating
+                    ? 'transform 320ms cubic-bezier(0.22, 1, 0.36, 1)'
+                    : 'none',
+                }}
+              >
+                {[
+                  getAdjacentSong(-1),
+                  currentSong,
+                  getAdjacentSong(1),
+                ].map((song, index) => {
+                  const image = getSongImage(song);
+                  const name = getSongName(song);
+
+                  return (
+                    <div
+                      key={`${song?.id || 'empty'}-art-${index}`}
+                      className="h-full w-1/3 shrink-0"
+                    >
+                      {image ? (
+                        <img
+                          src={image}
+                          alt={decodeHtml(name)}
+                          className="h-full w-full select-none object-cover"
+                          draggable="false"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-6xl">
+                          🎵
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
             {/* SONG INFORMATION */}
