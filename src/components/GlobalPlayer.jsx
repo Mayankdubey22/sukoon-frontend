@@ -62,6 +62,21 @@ function GlobalPlayer({
     setIsMobilePlayerOpen,
   ] = useState(false);
 
+  const mobilePlayerHistoryRef =
+    useRef(false);
+
+  const artworkTouchStartRef =
+    useRef({
+      x: 0,
+      y: 0,
+    });
+
+  const playerTouchStartRef =
+    useRef({
+      x: 0,
+      y: 0,
+    });
+
   const audioRef =
     useRef(null);
 
@@ -110,7 +125,7 @@ function GlobalPlayer({
   }, [isMobilePlayerOpen]);
 
   /* -------------------------------------------------------
-     HANDLE ANDROID / BROWSER BACK BUTTON
+     MOBILE PLAYER HISTORY / ANDROID BACK
   ------------------------------------------------------- */
 
   useEffect(() => {
@@ -118,14 +133,20 @@ function GlobalPlayer({
       return;
     }
 
-    // Add a history entry so Android's system Back button
-    // closes the full-screen player instead of leaving the page.
     window.history.pushState(
-      { sukoonMobilePlayer: true },
+      {
+        ...(window.history.state || {}),
+        sukoonMobilePlayer: true,
+      },
       ''
     );
 
+    mobilePlayerHistoryRef.current = true;
+
     const handlePopState = () => {
+      mobilePlayerHistoryRef.current =
+        false;
+
       setIsMobilePlayerOpen(false);
     };
 
@@ -141,6 +162,125 @@ function GlobalPlayer({
       );
     };
   }, [isMobilePlayerOpen]);
+
+  /* -------------------------------------------------------
+     CLOSE MOBILE PLAYER
+     ------------------------------------------------------- */
+
+  const closeMobilePlayer = () => {
+    if (
+      mobilePlayerHistoryRef.current &&
+      window.history.state?.sukoonMobilePlayer
+    ) {
+      window.history.back();
+      return;
+    }
+
+    setIsMobilePlayerOpen(false);
+  };
+
+  /* -------------------------------------------------------
+     MOBILE SWIPE GESTURES
+  ------------------------------------------------------- */
+
+  const handleArtworkTouchStart = (event) => {
+    const touch =
+      event.touches?.[0];
+
+    if (!touch) {
+      return;
+    }
+
+    artworkTouchStartRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+    };
+  };
+
+  const handleArtworkTouchEnd = async (event) => {
+    const touch =
+      event.changedTouches?.[0];
+
+    if (!touch) {
+      return;
+    }
+
+    const start =
+      artworkTouchStartRef.current;
+
+    const deltaX =
+      touch.clientX - start.x;
+
+    const deltaY =
+      touch.clientY - start.y;
+
+    const horizontalSwipe =
+      Math.abs(deltaX) >= 60 &&
+      Math.abs(deltaX) >
+        Math.abs(deltaY) * 1.2;
+
+    if (!horizontalSwipe) {
+      return;
+    }
+
+    if (deltaX < 0) {
+      if (!disableNext) {
+        await playNext();
+      }
+    } else if (!disablePrevious) {
+      await playPrevious();
+    }
+  };
+
+  const handlePlayerTouchStart = (event) => {
+    const touch =
+      event.touches?.[0];
+
+    if (!touch) {
+      return;
+    }
+
+    playerTouchStartRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+    };
+  };
+
+  const handlePlayerTouchEnd = (event) => {
+    const touch =
+      event.changedTouches?.[0];
+
+    if (!touch) {
+      return;
+    }
+
+    const start =
+      playerTouchStartRef.current;
+
+    const deltaX =
+      touch.clientX - start.x;
+
+    const deltaY =
+      touch.clientY - start.y;
+
+    const verticalSwipe =
+      Math.abs(deltaY) >= 80 &&
+      Math.abs(deltaY) >
+        Math.abs(deltaX) * 1.2;
+
+    if (!verticalSwipe || deltaY <= 0) {
+      return;
+    }
+
+    const contentElement =
+      event.currentTarget;
+
+    if (
+      contentElement.scrollTop <= 2
+    ) {
+      closeMobilePlayer();
+    }
+  };
 
   /* -------------------------------------------------------
      LOAD CURRENT SONG
@@ -759,13 +899,7 @@ function GlobalPlayer({
           >
             <button
               type="button"
-              onClick={() => {
-                if (window.history.state?.sukoonMobilePlayer) {
-                  window.history.back();
-                } else {
-                  setIsMobilePlayerOpen(false);
-                }
-              }}
+              onClick={closeMobilePlayer}
               className="
                 flex
                 h-10
@@ -842,7 +976,10 @@ function GlobalPlayer({
               overscroll-contain
               px-5
               pb-10
+              [touch-action:pan-y]
             "
+            onTouchStart={handlePlayerTouchStart}
+            onTouchEnd={handlePlayerTouchEnd}
           >
             {/* ARTWORK */}
 
@@ -858,7 +995,10 @@ function GlobalPlayer({
                 bg-[#282828]
                 shadow-[0_20px_60px_rgba(0,0,0,0.45)]
                 sm:mt-8
+                [touch-action:pan-y]
               "
+              onTouchStart={handleArtworkTouchStart}
+              onTouchEnd={handleArtworkTouchEnd}
             >
               {songImage ? (
                 <img
