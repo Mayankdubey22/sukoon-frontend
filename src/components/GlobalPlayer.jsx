@@ -124,6 +124,7 @@ function GlobalPlayer({
     dragging: false,
     swiped: false,
     width: 1,
+    currentX: 0,
   });
 
   const artworkSwipeRef = useRef({
@@ -132,6 +133,7 @@ function GlobalPlayer({
     dragging: false,
     swiped: false,
     width: 1,
+    currentX: 0,
   });
 
   const playerDragRef = useRef({
@@ -660,6 +662,7 @@ function GlobalPlayer({
       dragging: true,
       swiped: false,
       width,
+      currentX: 0,
     };
 
     setMiniSwipeAnimating(false);
@@ -688,12 +691,13 @@ function GlobalPlayer({
     const resistance =
       getAdjacentSong(dx < 0 ? -1 : 1) ? 1 : 0.28;
 
-    setMiniSwipeX(
-      Math.max(
-        -gesture.width * 0.92,
-        Math.min(gesture.width * 0.92, dx * resistance)
-      )
+    const nextX = Math.max(
+      -gesture.width * 0.92,
+      Math.min(gesture.width * 0.92, dx * resistance)
     );
+
+    gesture.currentX = nextX;
+    setMiniSwipeX(nextX);
   };
 
   const handleMiniTouchEnd = async () => {
@@ -702,12 +706,15 @@ function GlobalPlayer({
 
     gesture.dragging = false;
 
-    const threshold =
-      Math.min(gesture.width * 0.24, 90);
+    const swipeDistance = Math.abs(gesture.currentX);
+    const threshold = Math.min(
+      Math.max(34, gesture.width * 0.12),
+      55
+    );
 
-    if (Math.abs(miniSwipeX) >= threshold) {
+    if (swipeDistance >= threshold) {
       await finishMiniSwipe(
-        miniSwipeX < 0 ? -1 : 1
+        gesture.currentX < 0 ? -1 : 1
       );
     } else {
       setMiniSwipeAnimating(true);
@@ -772,6 +779,7 @@ function GlobalPlayer({
       dragging: true,
       swiped: false,
       width,
+      currentX: 0,
     };
 
     setArtworkSwipeAnimating(false);
@@ -800,12 +808,13 @@ function GlobalPlayer({
     const resistance =
       getAdjacentSong(dx < 0 ? -1 : 1) ? 1 : 0.28;
 
-    setArtworkSwipeX(
-      Math.max(
-        -gesture.width * 0.95,
-        Math.min(gesture.width * 0.95, dx * resistance)
-      )
+    const nextX = Math.max(
+      -gesture.width * 0.95,
+      Math.min(gesture.width * 0.95, dx * resistance)
     );
+
+    gesture.currentX = nextX;
+    setArtworkSwipeX(nextX);
   };
 
   const handleArtworkTouchEnd = async () => {
@@ -814,12 +823,15 @@ function GlobalPlayer({
 
     gesture.dragging = false;
 
-    const threshold =
-      Math.min(gesture.width * 0.22, 100);
+    const swipeDistance = Math.abs(gesture.currentX);
+    const threshold = Math.min(
+      Math.max(42, gesture.width * 0.13),
+      65
+    );
 
-    if (Math.abs(artworkSwipeX) >= threshold) {
+    if (swipeDistance >= threshold) {
       await finishArtworkSwipe(
-        artworkSwipeX < 0 ? -1 : 1
+        gesture.currentX < 0 ? -1 : 1
       );
     } else {
       setArtworkSwipeAnimating(true);

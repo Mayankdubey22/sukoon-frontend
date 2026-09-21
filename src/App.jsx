@@ -478,7 +478,27 @@ function Layout() {
             md:text-2xl
           "
         >
-          🎵 Sukoon
+          <span
+            className="
+              flex
+              items-center
+              gap-2
+            "
+          >
+            <img
+              src="/sukoon-logo.png"
+              alt=""
+              aria-hidden="true"
+              className="
+                h-8
+                w-8
+                object-contain
+                md:h-9
+                md:w-9
+              "
+            />
+            <span>Sukoon</span>
+          </span>
         </button>
 
         {/* SEARCH SECTION */}
@@ -492,7 +512,12 @@ function Layout() {
             max-w-2xl
             items-center
             gap-1
-            sm:mx-6
+            sm:absolute
+            sm:left-1/2
+            sm:top-1/2
+            sm:-translate-x-1/2
+            sm:-translate-y-1/2
+            sm:mx-0
             sm:gap-2
           "
         >
@@ -509,6 +534,7 @@ function Layout() {
               w-9
               shrink-0
               items-center
+              sm:hidden
               justify-center
               overflow-hidden
               rounded-lg
@@ -641,16 +667,7 @@ function Layout() {
           </div>
         </div>
 
-        {/* HEADER SPACER */}
 
-        <div
-          className="
-            hidden
-            w-[100px]
-            shrink-0
-            sm:block
-          "
-        />
       </header>
 
       {/* ===================================================
