@@ -26,6 +26,7 @@ import {
 } from '../LibraryContext';
 
 import AddToPlaylistButton from './AddToPlaylistButton';
+import Lyrics from '../lyrics/Lyrics';
 
 const decodeHtml = (text = '') => {
   const txt = document.createElement('textarea');
@@ -62,6 +63,11 @@ function GlobalPlayer({
     setIsMobilePlayerOpen,
   ] = useState(false);
 
+  const [
+    mobilePlayerPanel,
+    setMobilePlayerPanel,
+  ] = useState('lyrics');
+
   const audioRef =
     useRef(null);
 
@@ -77,6 +83,42 @@ function GlobalPlayer({
     currentTime,
     setCurrentTime,
   ] = useState(0);
+
+  /* -------------------------------------------------------
+     SMOOTH PLAYBACK TIME SYNC
+
+     The browser's timeupdate event is not guaranteed to fire
+     often enough for lyric synchronization. Keep the player
+     time state synced independently while audio is playing.
+  ------------------------------------------------------- */
+
+  useEffect(() => {
+    if (!isPlaying) {
+      return;
+    }
+
+    const syncPlaybackTime = () => {
+      const audio = audioRef.current;
+
+      if (
+        audio &&
+        Number.isFinite(audio.currentTime)
+      ) {
+        setCurrentTime(audio.currentTime);
+      }
+    };
+
+    syncPlaybackTime();
+
+    const intervalId = window.setInterval(
+      syncPlaybackTime,
+      100
+    );
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [isPlaying]);
 
   const [
     duration,
@@ -387,6 +429,28 @@ function GlobalPlayer({
 
       setCurrentTime(newTime);
     }
+  };
+
+  /* -------------------------------------------------------
+     SEEK FROM LYRICS
+  ------------------------------------------------------- */
+
+  const handleLyricsSeek = (time) => {
+    const audio = audioRef.current;
+
+    if (!audio || !Number.isFinite(time)) {
+      return;
+    }
+
+    const safeTime = Math.max(
+      0,
+      duration > 0
+        ? Math.min(time, duration)
+        : time
+    );
+
+    audio.currentTime = safeTime;
+    setCurrentTime(safeTime);
   };
 
   /* -------------------------------------------------------
@@ -1639,6 +1703,292 @@ function GlobalPlayer({
               />
             </div>
 
+            {/* =================================================
+                LYRICS / QUEUE TOGGLE
+            ================================================= */}
+
+            <section
+              className="
+                mt-8
+                overflow-hidden
+                rounded-2xl
+                border
+                border-white/10
+                bg-white/[0.03]
+              "
+            >
+              {/* PANEL TOGGLE */}
+              <div
+                className="
+                  grid
+                  grid-cols-2
+                  border-b
+                  border-white/10
+                  bg-white/[0.02]
+                  p-1
+                "
+              >
+                <button
+                  type="button"
+                  onClick={() =>
+                    setMobilePlayerPanel('lyrics')
+                  }
+                  className={`
+                    rounded-xl
+                    px-4
+                    py-2.5
+                    text-sm
+                    font-semibold
+                    transition-all
+                    active:scale-[0.98]
+                    ${
+                      mobilePlayerPanel === 'lyrics'
+                        ? 'bg-white text-black shadow-sm'
+                        : 'text-white/45 hover:bg-white/[0.05] hover:text-white/80'
+                    }
+                  `}
+                  aria-pressed={
+                    mobilePlayerPanel === 'lyrics'
+                  }
+                >
+                  Lyrics
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setMobilePlayerPanel('queue')
+                  }
+                  className={`
+                    rounded-xl
+                    px-4
+                    py-2.5
+                    text-sm
+                    font-semibold
+                    transition-all
+                    active:scale-[0.98]
+                    ${
+                      mobilePlayerPanel === 'queue'
+                        ? 'bg-white text-black shadow-sm'
+                        : 'text-white/45 hover:bg-white/[0.05] hover:text-white/80'
+                    }
+                  `}
+                  aria-pressed={
+                    mobilePlayerPanel === 'queue'
+                  }
+                >
+                  Queue
+                </button>
+              </div>
+
+              {/* LYRICS PANEL */}
+              {mobilePlayerPanel === 'lyrics' && (
+                <div>
+                  <div
+                    className="
+                      border-b
+                      border-white/10
+                      px-4
+                      py-3
+                    "
+                  >
+                    <h2 className="text-base font-bold text-white">
+                      Lyrics
+                    </h2>
+
+                    <p className="mt-0.5 text-xs text-white/40">
+                      Synced with the song when available
+                    </p>
+                  </div>
+
+                  <div className="h-[360px] sm:h-[420px]">
+                    <Lyrics
+                      song={{
+                        ...currentSong,
+                        artist: artistName,
+                        album:
+                          currentSong.album?.name ||
+                          currentSong.album ||
+                          '',
+                      }}
+                      currentTime={currentTime}
+                      onSeek={handleLyricsSeek}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* QUEUE PANEL */}
+              {mobilePlayerPanel === 'queue' && (
+                <div className="px-4 pb-4">
+                  <div
+                    className="
+                      flex
+                      items-center
+                      justify-between
+                      border-b
+                      border-white/10
+                      py-4
+                    "
+                  >
+                    <div>
+                      <h2 className="text-base font-bold">
+                        Queue
+                      </h2>
+
+                      <p className="mt-0.5 text-xs text-white/40">
+                        {queueWithoutCurrent.length}{' '}
+                        songs coming up
+                      </p>
+                    </div>
+
+                    <span className="text-xs font-medium text-white/40">
+                      Next up
+                    </span>
+                  </div>
+
+                  <div className="mt-3 max-h-[360px] overflow-y-auto overscroll-contain pr-1 sm:max-h-[420px]">
+                    {safeQueue.length === 0 ? (
+                      <div
+                        className="
+                          rounded-xl
+                          bg-white/[0.04]
+                          px-4
+                          py-6
+                          text-center
+                          text-sm
+                          text-white/40
+                        "
+                      >
+                        Your queue is empty.
+                      </div>
+                    ) : (
+                      safeQueue.map((song, index) => {
+                        const image =
+                          song.image?.[1]?.url ||
+                          song.image?.[0]?.url ||
+                          '';
+
+                        const name =
+                          song.name ||
+                          song.title ||
+                          'Unknown song';
+
+                        const artist =
+                          song.artists?.primary
+                            ?.map((item) => item.name)
+                            .join(', ') ||
+                          song.primaryArtists ||
+                          '';
+
+                        const isCurrent =
+                          index === currentIndex;
+
+                        return (
+                          <button
+                            key={`${song.id}-${index}`}
+                            type="button"
+                            onClick={() =>
+                              handleQueueSongClick(song, index)
+                            }
+                            className={`
+                              flex
+                              w-full
+                              items-center
+                              gap-3
+                              rounded-xl
+                              px-2
+                              py-2.5
+                              text-left
+                              transition
+                              active:scale-[0.99]
+                              ${
+                                isCurrent
+                                  ? 'bg-[#1db954]/10'
+                                  : 'hover:bg-white/[0.05]'
+                              }
+                            `}
+                          >
+                            <div
+                              className="
+                                flex
+                                w-5
+                                shrink-0
+                                items-center
+                                justify-center
+                              "
+                            >
+                              {isCurrent ? (
+                                <div className="flex items-end gap-[2px]">
+                                  <span className="h-2.5 w-[2px] animate-pulse bg-[#1db954]" />
+                                  <span className="h-4 w-[2px] animate-pulse bg-[#1db954]" />
+                                  <span className="h-3 w-[2px] animate-pulse bg-[#1db954]" />
+                                </div>
+                              ) : (
+                                <span className="text-xs tabular-nums text-white/30">
+                                  {index + 1}
+                                </span>
+                              )}
+                            </div>
+
+                            <div
+                              className="
+                                h-12
+                                w-12
+                                shrink-0
+                                overflow-hidden
+                                rounded-md
+                                bg-[#282828]
+                              "
+                            >
+                              {image ? (
+                                <img
+                                  src={image}
+                                  alt={decodeHtml(name)}
+                                  className="h-full w-full object-cover"
+                                  draggable="false"
+                                />
+                              ) : (
+                                <div className="flex h-full w-full items-center justify-center text-lg">
+                                  🎵
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="min-w-0 flex-1">
+                              <p
+                                className={`
+                                  truncate
+                                  text-sm
+                                  font-medium
+                                  ${
+                                    isCurrent
+                                      ? 'text-[#1db954]'
+                                      : 'text-white'
+                                  }
+                                `}
+                              >
+                                {decodeHtml(name)}
+                              </p>
+
+                              <p className="mt-1 truncate text-xs text-white/45">
+                                {decodeHtml(artist)}
+                              </p>
+                            </div>
+
+                            <MoreHorizontal
+                              size={18}
+                              className="shrink-0 text-white/25"
+                            />
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              )}
+            </section>
+
             {/* PLAYER ERROR */}
 
             {playerError && (
@@ -1653,299 +2003,6 @@ function GlobalPlayer({
                 {playerError}
               </p>
             )}
-
-            {/* =================================================
-                QUEUE
-            ================================================= */}
-
-            <section
-              className="
-                mt-8
-                border-t
-                border-white/10
-                pt-6
-              "
-            >
-              <div
-                className="
-                  flex
-                  items-center
-                  justify-between
-                "
-              >
-                <div>
-                  <h2
-                    className="
-                      text-lg
-                      font-bold
-                    "
-                  >
-                    Queue
-                  </h2>
-
-                  <p
-                    className="
-                      mt-0.5
-                      text-xs
-                      text-white/40
-                    "
-                  >
-                    {queueWithoutCurrent.length}{' '}
-                    songs coming up
-                  </p>
-                </div>
-
-                <span
-                  className="
-                    text-xs
-                    font-medium
-                    text-white/40
-                  "
-                >
-                  Next up
-                </span>
-              </div>
-
-              <div
-                className="
-                  mt-4
-                  space-y-1
-                "
-              >
-                {safeQueue.length === 0 ? (
-                  <div
-                    className="
-                      rounded-xl
-                      bg-white/[0.04]
-                      px-4
-                      py-6
-                      text-center
-                      text-sm
-                      text-white/40
-                    "
-                  >
-                    Your queue is empty.
-                  </div>
-                ) : (
-                  safeQueue.map(
-                    (
-                      song,
-                      index
-                    ) => {
-                      const image =
-                        song.image?.[1]
-                          ?.url ||
-                        song.image?.[0]
-                          ?.url ||
-                        '';
-
-                      const name =
-                        song.name ||
-                        song.title ||
-                        'Unknown song';
-
-                      const artist =
-                        song.artists
-                          ?.primary
-                          ?.map(
-                            (
-                              item
-                            ) =>
-                              item.name
-                          )
-                          .join(
-                            ', '
-                          ) ||
-                        song.primaryArtists ||
-                        '';
-
-                      const isCurrent =
-                        index ===
-                        currentIndex;
-
-                      return (
-                        <button
-                          key={`${song.id}-${index}`}
-                          type="button"
-                          onClick={() =>
-                            handleQueueSongClick(
-                              song,
-                              index
-                            )
-                          }
-                          className={`
-                            flex
-                            w-full
-                            items-center
-                            gap-3
-                            rounded-xl
-                            px-2
-                            py-2.5
-                            text-left
-                            transition
-                            active:scale-[0.99]
-                            ${
-                              isCurrent
-                                ? 'bg-[#1db954]/10'
-                                : 'hover:bg-white/[0.05]'
-                            }
-                          `}
-                        >
-                          {/* NUMBER / PLAYING */}
-
-                          <div
-                            className="
-                              flex
-                              w-5
-                              shrink-0
-                              items-center
-                              justify-center
-                            "
-                          >
-                            {isCurrent ? (
-                              <div
-                                className="
-                                  flex
-                                  items-end
-                                  gap-[2px]
-                                "
-                              >
-                                <span
-                                  className="
-                                    h-2.5
-                                    w-[2px]
-                                    animate-pulse
-                                    bg-[#1db954]
-                                  "
-                                />
-
-                                <span
-                                  className="
-                                    h-4
-                                    w-[2px]
-                                    animate-pulse
-                                    bg-[#1db954]
-                                  "
-                                />
-
-                                <span
-                                  className="
-                                    h-3
-                                    w-[2px]
-                                    animate-pulse
-                                    bg-[#1db954]
-                                  "
-                                />
-                              </div>
-                            ) : (
-                              <span
-                                className="
-                                  text-xs
-                                  tabular-nums
-                                  text-white/30
-                                "
-                              >
-                                {index +
-                                  1}
-                              </span>
-                            )}
-                          </div>
-
-                          {/* IMAGE */}
-
-                          <div
-                            className="
-                              h-12
-                              w-12
-                              shrink-0
-                              overflow-hidden
-                              rounded-md
-                              bg-[#282828]
-                            "
-                          >
-                            {image ? (
-                              <img
-                                src={image}
-                                alt={decodeHtml(
-                                  name
-                                )}
-                                className="
-                                  h-full
-                                  w-full
-                                  object-cover
-                                "
-                              />
-                            ) : (
-                              <div
-                                className="
-                                  flex
-                                  h-full
-                                  w-full
-                                  items-center
-                                  justify-center
-                                  text-lg
-                                "
-                              >
-                                🎵
-                              </div>
-                            )}
-                          </div>
-
-                          {/* INFO */}
-
-                          <div
-                            className="
-                              min-w-0
-                              flex-1
-                            "
-                          >
-                            <p
-                              className={`
-                                truncate
-                                text-sm
-                                font-medium
-                                ${
-                                  isCurrent
-                                    ? 'text-[#1db954]'
-                                    : 'text-white'
-                                }
-                              `}
-                            >
-                              {decodeHtml(
-                                name
-                              )}
-                            </p>
-
-                            <p
-                              className="
-                                mt-1
-                                truncate
-                                text-xs
-                                text-white/45
-                              "
-                            >
-                              {decodeHtml(
-                                artist
-                              )}
-                            </p>
-                          </div>
-
-                          {/* MORE */}
-
-                          <MoreHorizontal
-                            size={18}
-                            className="
-                              shrink-0
-                              text-white/25
-                            "
-                          />
-                        </button>
-                      );
-                    }
-                  )
-                )}
-              </div>
-            </section>
           </div>
         </div>
       )}
