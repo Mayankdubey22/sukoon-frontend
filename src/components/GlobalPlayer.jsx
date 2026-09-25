@@ -15,6 +15,8 @@ import {
   ChevronDown,
   MoreHorizontal,
   Heart,
+  X,
+  ListMusic,
 } from 'lucide-react';
 
 import {
@@ -35,9 +37,7 @@ const decodeHtml = (text = '') => {
 };
 
 
-function GlobalPlayer({
-  onDesktopArtworkClick,
-}) {
+function GlobalPlayer() {
   const {
     currentSong,
     playNext,
@@ -56,6 +56,9 @@ function GlobalPlayer({
   const {
     isLiked,
     toggleLike,
+    playlists,
+    addToPlaylist,
+    libraryLoaded,
   } = useLibrary();
 
   const [
@@ -67,6 +70,21 @@ function GlobalPlayer({
     mobilePlayerPanel,
     setMobilePlayerPanel,
   ] = useState('lyrics');
+
+  const [
+    isDesktopPlayerOpen,
+    setIsDesktopPlayerOpen,
+  ] = useState(false);
+
+  const [
+    desktopPlayerPanel,
+    setDesktopPlayerPanel,
+  ] = useState('lyrics');
+
+  const [
+    isDesktopMoreMenuOpen,
+    setIsDesktopMoreMenuOpen,
+  ] = useState(false);
 
   const audioRef =
     useRef(null);
@@ -191,25 +209,41 @@ function GlobalPlayer({
   const mobileHistoryPushedRef = useRef(false);
 
   /* -------------------------------------------------------
-     LOCK BODY SCROLL WHEN MOBILE PLAYER IS OPEN
+     LOCK PAGE SCROLL WHEN FULL PLAYER IS OPEN
   ------------------------------------------------------- */
 
   useEffect(() => {
-    if (!isMobilePlayerOpen) {
+    const shouldLockScroll =
+      isMobilePlayerOpen ||
+      isDesktopPlayerOpen;
+
+    if (!shouldLockScroll) {
       return;
     }
 
-    const previousOverflow =
+    const previousBodyOverflow =
       document.body.style.overflow;
+
+    const previousHtmlOverflow =
+      document.documentElement.style.overflow;
 
     document.body.style.overflow =
       'hidden';
 
+    document.documentElement.style.overflow =
+      'hidden';
+
     return () => {
       document.body.style.overflow =
-        previousOverflow;
+        previousBodyOverflow;
+
+      document.documentElement.style.overflow =
+        previousHtmlOverflow;
     };
-  }, [isMobilePlayerOpen]);
+  }, [
+    isMobilePlayerOpen,
+    isDesktopPlayerOpen,
+  ]);
 
   /* -------------------------------------------------------
      ANDROID / BROWSER BACK BUTTON
@@ -245,6 +279,61 @@ function GlobalPlayer({
       );
     };
   }, [isMobilePlayerOpen]);
+
+  /* -------------------------------------------------------
+     DESKTOP PLAYER ESCAPE / RESPONSIVE CLOSE
+  ------------------------------------------------------- */
+
+  useEffect(() => {
+    if (!isDesktopPlayerOpen) {
+      return;
+    }
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setIsDesktopPlayerOpen(false);
+        setIsDesktopMoreMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isDesktopPlayerOpen]);
+
+  /* -------------------------------------------------------
+     CLOSE DESKTOP MORE MENU WHEN CLICKING OUTSIDE
+  ------------------------------------------------------- */
+
+  useEffect(() => {
+    if (!isDesktopMoreMenuOpen) {
+      return;
+    }
+
+    const handlePointerDown = (event) => {
+      if (
+        !event.target.closest(
+          '[data-desktop-more-menu]'
+        )
+      ) {
+        setIsDesktopMoreMenuOpen(false);
+      }
+    };
+
+    document.addEventListener(
+      'mousedown',
+      handlePointerDown
+    );
+
+    return () => {
+      document.removeEventListener(
+        'mousedown',
+        handlePointerDown
+      );
+    };
+  }, [isDesktopMoreMenuOpen]);
 
   /* -------------------------------------------------------
      LOAD CURRENT SONG
@@ -2008,12 +2097,1009 @@ function GlobalPlayer({
       )}
 
       {/* ===================================================
+          DESKTOP NOW PLAYING VIEW
+      =================================================== */}
+
+      {isDesktopPlayerOpen && (
+        <div
+          className="
+            fixed
+            inset-x-0
+            top-16
+            bottom-0
+            z-[80]
+            hidden
+            overflow-hidden
+            bg-[#090909]
+            text-white
+            md:left-[260px]
+            md:flex
+            lg:left-[280px]
+            xl:left-[300px]
+          "
+        >
+          {/* SOFT ARTWORK BACKGROUND */}
+
+          {songImage && (
+            <div
+              className="
+                pointer-events-none
+                absolute
+                inset-0
+                overflow-hidden
+              "
+            >
+              <img
+                src={songImage}
+                alt=""
+                aria-hidden="true"
+                className="
+                  h-full
+                  w-full
+                  scale-110
+                  object-cover
+                  opacity-[0.14]
+                  blur-3xl
+                "
+              />
+
+              <div
+                className="
+                  absolute
+                  inset-0
+                  bg-[linear-gradient(to_right,rgba(9,9,9,0.94),rgba(9,9,9,0.78),rgba(9,9,9,0.92))]
+                "
+              />
+            </div>
+          )}
+
+          {/* HIDE THE INTERNAL LYRICS / QUEUE SCROLLBAR */}
+
+          <style>{`
+            .sukoon-hide-scrollbar {
+              scrollbar-width: none;
+              -ms-overflow-style: none;
+            }
+
+            .sukoon-hide-scrollbar::-webkit-scrollbar {
+              width: 0;
+              height: 0;
+              display: none;
+            }
+          `}</style>
+
+          {/* FIXED NOW PLAYING PANEL */}
+
+          <div
+            className="
+              relative
+              flex
+              h-full
+              w-full
+              min-h-0
+              min-w-0
+              flex-col
+              overflow-hidden
+              border
+              border-white/10
+              bg-[#111111]/80
+              shadow-2xl
+              backdrop-blur-xl
+            "
+          >
+            {/* CLOSE BUTTON */}
+
+            <button
+              type="button"
+              onClick={() => {
+                setIsDesktopPlayerOpen(false);
+                setIsDesktopMoreMenuOpen(false);
+              }}
+              className="
+                absolute
+                left-4
+                top-4
+                z-20
+                flex
+                h-10
+                w-10
+                items-center
+                justify-center
+                rounded-full
+                text-white/65
+                transition
+                hover:bg-white/10
+                hover:text-white
+                active:scale-90
+              "
+              aria-label="Close now playing"
+              title="Close"
+            >
+              <X size={22} />
+            </button>
+
+            {/* FIXED MAIN AREA
+                The page itself never scrolls. */}
+
+            <div
+              className="
+                min-h-0
+                flex-1
+                overflow-hidden
+                px-5
+                py-5
+                lg:px-8
+                lg:py-6
+              "
+            >
+              <div
+                className="
+                  grid
+                  h-full
+                  min-h-0
+                  grid-cols-1
+                  gap-5
+                  md:grid-cols-[minmax(390px,0.95fr)_minmax(420px,1.05fr)]
+                  lg:gap-8
+                  xl:grid-cols-[minmax(430px,0.95fr)_minmax(500px,1.05fr)]
+                "
+              >
+                {/* =================================================
+                    LEFT - FIXED PLAYER
+                ================================================= */}
+
+                <section
+                  className="
+                    flex
+                    min-h-0
+                    min-w-0
+                    flex-col
+                    items-center
+                    justify-center
+                    overflow-hidden
+                    px-1
+                  "
+                >
+                  {/* ARTWORK */}
+
+                  <div
+                    className="
+                      flex
+                      w-full
+                      min-h-0
+                      flex-1
+                      items-center
+                      justify-center
+                    "
+                  >
+                    <div
+                      className="
+                        relative
+                        w-[min(24vw,300px)]
+                        max-w-[300px]
+                        overflow-hidden
+                        rounded-2xl
+                        border
+                        border-white/10
+                        bg-[#202020]
+                        shadow-[0_30px_80px_rgba(0,0,0,0.5)]
+                      "
+                    >
+                      {songImage ? (
+                        <img
+                          src={songImage}
+                          alt={decodeHtml(songName)}
+                          className="
+                            aspect-square
+                            w-full
+                            object-cover
+                          "
+                          draggable="false"
+                        />
+                      ) : (
+                        <div
+                          className="
+                            flex
+                            aspect-square
+                            w-full
+                            items-center
+                            justify-center
+                            text-7xl
+                          "
+                        >
+                          🎵
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* SONG INFORMATION */}
+
+                  <div
+                    className="
+                      mt-3
+                      flex
+                      w-full
+                      max-w-[560px]
+                      shrink-0
+                      items-center
+                      gap-3
+                    "
+                  >
+                    <div className="min-w-0 flex-1">
+                      <h1
+                        className="
+                          truncate
+                          text-2xl
+                          font-bold
+                          tracking-tight
+                          lg:text-[28px]
+                        "
+                      >
+                        {decodeHtml(songName)}
+                      </h1>
+
+                      <p
+                        className="
+                          mt-1
+                          truncate
+                          text-sm
+                          text-white/55
+                          lg:text-base
+                        "
+                      >
+                        {decodeHtml(artistName)}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => toggleLike(currentSong)}
+                      className="
+                        flex
+                        h-10
+                        w-10
+                        shrink-0
+                        items-center
+                        justify-center
+                        rounded-full
+                        text-white/70
+                        transition
+                        hover:bg-white/10
+                        hover:text-white
+                        active:scale-90
+                      "
+                      aria-label={
+                        currentSongLiked
+                          ? 'Unlike song'
+                          : 'Like song'
+                      }
+                    >
+                      <Heart
+                        size={23}
+                        fill={
+                          currentSongLiked
+                            ? 'currentColor'
+                            : 'none'
+                        }
+                        className={
+                          currentSongLiked
+                            ? 'text-[#ff4f91]'
+                            : ''
+                        }
+                      />
+                    </button>
+
+                    <div
+                      className="
+                        relative
+                        shrink-0
+                      "
+                      data-desktop-more-menu
+                    >
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setIsDesktopMoreMenuOpen(
+                            (open) => !open
+                          )
+                        }
+                        className="
+                          flex
+                          h-10
+                          w-10
+                          items-center
+                          justify-center
+                          rounded-full
+                          text-white/60
+                          transition
+                          hover:bg-white/10
+                          hover:text-white
+                          active:scale-90
+                        "
+                        aria-label="More options"
+                        aria-expanded={
+                          isDesktopMoreMenuOpen
+                        }
+                        title="More options"
+                      >
+                        <MoreHorizontal size={23} />
+                      </button>
+
+                      {isDesktopMoreMenuOpen && (
+                        <div
+                          className="
+                            absolute
+                            bottom-12
+                            right-0
+                            z-[100]
+                            w-64
+                            overflow-hidden
+                            rounded-xl
+                            border
+                            border-white/10
+                            bg-[#242424]
+                            p-2
+                            shadow-[0_18px_50px_rgba(0,0,0,0.5)]
+                            backdrop-blur-xl
+                          "
+                          data-desktop-more-menu
+                          onMouseDown={(event) =>
+                            event.stopPropagation()
+                          }
+                        >
+                          <div
+                            className="
+                              px-2
+                              pb-2
+                              pt-1
+                              text-[11px]
+                              font-semibold
+                              uppercase
+                              tracking-[0.14em]
+                              text-white/40
+                            "
+                          >
+                            Add to playlist
+                          </div>
+
+                          {!libraryLoaded ? (
+                            <p
+                              className="
+                                px-2
+                                py-4
+                                text-center
+                                text-sm
+                                text-white/40
+                              "
+                            >
+                              Loading playlists...
+                            </p>
+                          ) : playlists.length === 0 ? (
+                            <p
+                              className="
+                                px-2
+                                py-4
+                                text-center
+                                text-sm
+                                text-white/40
+                              "
+                            >
+                              No playlists created yet
+                            </p>
+                          ) : (
+                            <div
+                              className="
+                                max-h-64
+                                overflow-y-auto
+                                pr-1
+                                [scrollbar-width:none]
+                                [&::-webkit-scrollbar]:hidden
+                              "
+                            >
+                              {playlists.map((playlist) => {
+                                const alreadyAdded =
+                                  playlist.songs?.some(
+                                    (item) =>
+                                      item.id ===
+                                      currentSong?.id
+                                  );
+
+                                return (
+                                  <button
+                                    key={playlist.id}
+                                    type="button"
+                                    onClick={() => {
+                                      if (!alreadyAdded) {
+                                        addToPlaylist(
+                                          playlist.id,
+                                          currentSong
+                                        );
+                                      }
+
+                                      setIsDesktopMoreMenuOpen(
+                                        false
+                                      );
+                                    }}
+                                    disabled={alreadyAdded}
+                                    className={`
+                                      flex
+                                      w-full
+                                      items-center
+                                      justify-between
+                                      gap-3
+                                      rounded-lg
+                                      px-3
+                                      py-2.5
+                                      text-left
+                                      text-sm
+                                      transition
+                                      ${
+                                        alreadyAdded
+                                          ? 'cursor-default text-[#ff4f91]/80'
+                                          : 'text-white/85 hover:bg-white/10 hover:text-white'
+                                      }
+                                    `}
+                                    title={
+                                      alreadyAdded
+                                        ? 'Song is already in this playlist'
+                                        : `Add to ${playlist.name}`
+                                    }
+                                  >
+                                    <span
+                                      className="
+                                        min-w-0
+                                        truncate
+                                      "
+                                    >
+                                      {playlist.name}
+                                    </span>
+
+                                    {alreadyAdded && (
+                                      <span
+                                        className="
+                                          shrink-0
+                                          text-xs
+                                          font-medium
+                                        "
+                                      >
+                                        Added
+                                      </span>
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* PROGRESS */}
+
+                  <div className="mt-4 w-full max-w-[560px] shrink-0">
+                    <input
+                      type="range"
+                      min="0"
+                      max={duration || 0}
+                      value={Math.min(
+                        currentTime,
+                        duration || 0
+                      )}
+                      onChange={handleSeek}
+                      aria-label="Song progress"
+                      className="
+                        h-1
+                        w-full
+                        cursor-pointer
+                        appearance-none
+                        rounded-full
+                        bg-[#4d4d4d]
+                        accent-[#ff4f91]
+                        transition
+                        hover:h-1.5
+                      "
+                      style={{
+                        background: `linear-gradient(to right, #ff4f91 ${progressPercentage}%, #4d4d4d ${progressPercentage}%)`,
+                      }}
+                    />
+
+                    <div
+                      className="
+                        mt-1.5
+                        flex
+                        justify-between
+                        text-[11px]
+                        tabular-nums
+                        text-white/45
+                      "
+                    >
+                      <span>
+                        {formatTime(currentTime)}
+                      </span>
+
+                      <span>
+                        {formatTime(duration)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* CONTROLS */}
+
+                  <div
+                    className="
+                      mt-3
+                      flex
+                      shrink-0
+                      items-center
+                      justify-center
+                      gap-3
+                      pb-1
+                      sm:gap-5
+                    "
+                  >
+                    <button
+                      type="button"
+                      onClick={toggleShuffle}
+                      className={`
+                        flex
+                        h-10
+                        w-10
+                        items-center
+                        justify-center
+                        rounded-full
+                        transition
+                        hover:bg-white/10
+                        ${
+                          isShuffled
+                            ? 'text-[#ff4f91]'
+                            : 'text-white/60 hover:text-white'
+                        }
+                      `}
+                      aria-label="Shuffle"
+                    >
+                      <Shuffle size={19} />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={playPrevious}
+                      disabled={disablePrevious}
+                      className="
+                        flex
+                        h-11
+                        w-11
+                        items-center
+                        justify-center
+                        rounded-full
+                        text-white
+                        transition
+                        hover:bg-white/10
+                        disabled:cursor-not-allowed
+                        disabled:opacity-30
+                      "
+                      aria-label="Previous song"
+                    >
+                      <SkipBack
+                        size={23}
+                        fill="currentColor"
+                      />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={togglePlay}
+                      className="
+                        flex
+                        h-14
+                        w-14
+                        items-center
+                        justify-center
+                        rounded-full
+                        bg-[#ff4f91]
+                        text-black
+                        shadow-[0_10px_35px_rgba(255,79,145,0.28)]
+                        transition
+                        hover:scale-105
+                        active:scale-95
+                      "
+                      aria-label={
+                        isPlaying
+                          ? 'Pause'
+                          : 'Play'
+                      }
+                    >
+                      {isPlaying ? (
+                        <Pause
+                          size={25}
+                          fill="black"
+                        />
+                      ) : (
+                        <Play
+                          size={25}
+                          fill="black"
+                        />
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={playNext}
+                      disabled={disableNext}
+                      className="
+                        flex
+                        h-11
+                        w-11
+                        items-center
+                        justify-center
+                        rounded-full
+                        text-white
+                        transition
+                        hover:bg-white/10
+                        disabled:cursor-not-allowed
+                        disabled:opacity-30
+                      "
+                      aria-label="Next song"
+                    >
+                      <SkipForward
+                        size={23}
+                        fill="currentColor"
+                      />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={toggleRepeat}
+                      className={`
+                        relative
+                        flex
+                        h-10
+                        w-10
+                        items-center
+                        justify-center
+                        rounded-full
+                        transition
+                        hover:bg-white/10
+                        ${
+                          repeatMode !== 'off'
+                            ? 'text-[#ff4f91]'
+                            : 'text-white/60 hover:text-white'
+                        }
+                      `}
+                      aria-label="Repeat"
+                    >
+                      <Repeat size={19} />
+
+                      {repeatMode === 'one' && (
+                        <span
+                          className="
+                            absolute
+                            right-1
+                            top-0
+                            text-[9px]
+                            font-bold
+                          "
+                        >
+                          1
+                        </span>
+                      )}
+                    </button>
+                  </div>
+                </section>
+
+                {/* =================================================
+                    RIGHT - INTERNAL SCROLL ONLY
+                ================================================= */}
+
+                <section
+                  className="
+                    flex
+                    min-h-0
+                    min-w-0
+                    flex-col
+                    overflow-hidden
+                    rounded-2xl
+                    border
+                    border-white/10
+                    bg-black/20
+                  "
+                >
+                  {/* PANEL TOGGLE */}
+
+                  <div
+                    className="
+                      shrink-0
+                      border-b
+                      border-white/10
+                      p-3
+                      lg:p-4
+                    "
+                  >
+                    <div
+                      className="
+                        grid
+                        grid-cols-2
+                        rounded-xl
+                        bg-black/30
+                        p-1
+                      "
+                    >
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setDesktopPlayerPanel(
+                            'lyrics'
+                          )
+                        }
+                        className={`
+                          rounded-lg
+                          px-4
+                          py-2.5
+                          text-sm
+                          font-semibold
+                          transition
+                          ${
+                            desktopPlayerPanel === 'lyrics'
+                              ? 'bg-[#ff4f91] text-black shadow-sm'
+                              : 'text-white/45 hover:bg-white/[0.05] hover:text-white/80'
+                          }
+                        `}
+                        aria-pressed={
+                          desktopPlayerPanel ===
+                          'lyrics'
+                        }
+                      >
+                        Lyrics
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setDesktopPlayerPanel(
+                            'queue'
+                          )
+                        }
+                        className={`
+                          rounded-lg
+                          px-4
+                          py-2.5
+                          text-sm
+                          font-semibold
+                          transition
+                          ${
+                            desktopPlayerPanel === 'queue'
+                              ? 'bg-[#ff4f91] text-black shadow-sm'
+                              : 'text-white/45 hover:bg-white/[0.05] hover:text-white/80'
+                          }
+                        `}
+                        aria-pressed={
+                          desktopPlayerPanel ===
+                          'queue'
+                        }
+                      >
+                        Queue
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* ONLY THIS AREA SCROLLS */}
+
+                  <div
+                    className="
+                      min-h-0
+                      flex-1
+                      sukoon-hide-scrollbar
+                      overflow-y-auto
+                      overscroll-contain
+                      px-5
+                      py-6
+                      lg:px-7
+                    "
+                  >
+                    {desktopPlayerPanel ===
+                    'lyrics' ? (
+                      <Lyrics
+                        song={{
+                          ...currentSong,
+                          artist: artistName,
+                          album:
+                            currentSong.album
+                              ?.name ||
+                            currentSong.album ||
+                            '',
+                        }}
+                        currentTime={
+                          currentTime
+                        }
+                        onSeek={
+                          handleLyricsSeek
+                        }
+                      />
+                    ) : (
+                      <div className="space-y-1">
+                        {safeQueue.length ===
+                        0 ? (
+                          <div
+                            className="
+                              rounded-xl
+                              bg-white/[0.04]
+                              px-4
+                              py-8
+                              text-center
+                              text-sm
+                              text-white/40
+                            "
+                          >
+                            Your queue is
+                            empty.
+                          </div>
+                        ) : (
+                          safeQueue.map(
+                            (
+                              song,
+                              index
+                            ) => {
+                              const image =
+                                getSongImage(
+                                  song
+                                );
+
+                              const name =
+                                getSongName(
+                                  song
+                                );
+
+                              const artist =
+                                getArtistName(
+                                  song
+                                );
+
+                              const isCurrent =
+                                index ===
+                                currentIndex;
+
+                              return (
+                                <button
+                                  key={`${song.id}-${index}-desktop`}
+                                  type="button"
+                                  onClick={() =>
+                                    handleQueueSongClick(
+                                      song,
+                                      index
+                                    )
+                                  }
+                                  className={`
+                                    flex
+                                    w-full
+                                    items-center
+                                    gap-3
+                                    rounded-xl
+                                    px-3
+                                    py-3
+                                    text-left
+                                    transition
+                                    active:scale-[0.99]
+                                    ${
+                                      isCurrent
+                                        ? 'bg-white/[0.08]'
+                                        : 'hover:bg-white/[0.05]'
+                                    }
+                                  `}
+                                >
+                                  <div
+                                    className="
+                                      flex
+                                      w-6
+                                      shrink-0
+                                      items-center
+                                      justify-center
+                                    "
+                                  >
+                                    {isCurrent ? (
+                                      <div className="flex items-end gap-[2px]">
+                                        <span className="h-2.5 w-[2px] animate-pulse bg-[#ff4f91]" />
+                                        <span className="h-4 w-[2px] animate-pulse bg-[#ff4f91]" />
+                                        <span className="h-3 w-[2px] animate-pulse bg-[#ff4f91]" />
+                                      </div>
+                                    ) : (
+                                      <span className="text-xs tabular-nums text-white/30">
+                                        {index + 1}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <div
+                                    className="
+                                      h-12
+                                      w-12
+                                      shrink-0
+                                      overflow-hidden
+                                      rounded-lg
+                                      bg-[#282828]
+                                    "
+                                  >
+                                    {image ? (
+                                      <img
+                                        src={
+                                          image
+                                        }
+                                        alt={decodeHtml(
+                                          name
+                                        )}
+                                        className="h-full w-full object-cover"
+                                        draggable="false"
+                                      />
+                                    ) : (
+                                      <div className="flex h-full w-full items-center justify-center text-lg">
+                                        🎵
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  <div className="min-w-0 flex-1">
+                                    <p
+                                      className={`
+                                        truncate
+                                        text-sm
+                                        font-medium
+                                        ${
+                                          isCurrent
+                                            ? 'text-[#ff4f91]'
+                                            : 'text-white'
+                                        }
+                                      `}
+                                    >
+                                      {decodeHtml(
+                                        name
+                                      )}
+                                    </p>
+
+                                    <p className="mt-1 truncate text-xs text-white/45">
+                                      {decodeHtml(
+                                        artist
+                                      )}
+                                    </p>
+                                  </div>
+
+                                  <ListMusic
+                                    size={17}
+                                    className="shrink-0 text-white/25"
+                                  />
+                                </button>
+                              );
+                            }
+                          )
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </section>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===================================================
           DESKTOP GLOBAL PLAYER
           KEEPING EXISTING DESKTOP UI
       =================================================== */}
 
+      {!isDesktopPlayerOpen && (
       <div
-        className="
+        onClick={(event) => {
+          const interactiveElement = event.target.closest(
+            'button, input, a, [role="button"]'
+          );
+
+          if (interactiveElement) {
+            return;
+          }
+
+          setIsDesktopPlayerOpen(true);
+        }}
+        className={`
           fixed
           inset-x-0
           bottom-0
@@ -2027,9 +3113,10 @@ function GlobalPlayer({
           text-white
           shadow-[0_-10px_40px_rgba(0,0,0,0.35)]
           backdrop-blur-xl
-          md:block
+          cursor-pointer
+          ${isDesktopPlayerOpen ? 'md:hidden' : 'md:block'}
           md:h-24
-        "
+        `}
       >
         <div
           className="
@@ -2055,7 +3142,7 @@ function GlobalPlayer({
             {songImage ? (
               <button
                 type="button"
-                onClick={onDesktopArtworkClick}
+                onClick={() => setIsDesktopPlayerOpen(true)}
                 className="
                   group
                   relative
@@ -2069,8 +3156,8 @@ function GlobalPlayer({
                   focus:ring-2
                   focus:ring-white/20
                 "
-                aria-label="Toggle now playing panel"
-                title="Show queue and song details"
+                aria-label="Open now playing"
+                title="Open now playing"
               >
                 <img
                   src={songImage}
@@ -2090,7 +3177,7 @@ function GlobalPlayer({
             ) : (
               <button
                 type="button"
-                onClick={onDesktopArtworkClick}
+                onClick={() => setIsDesktopPlayerOpen(true)}
                 className="
                   flex
                   h-14
@@ -2107,8 +3194,8 @@ function GlobalPlayer({
                   focus:ring-2
                   focus:ring-white/20
                 "
-                aria-label="Toggle now playing panel"
-                title="Show queue and song details"
+                aria-label="Open now playing"
+                title="Open now playing"
               >
                 🎵
               </button>
@@ -2529,6 +3616,7 @@ function GlobalPlayer({
           </div>
         </div>
       </div>
+      )}
     </>
   );
 }

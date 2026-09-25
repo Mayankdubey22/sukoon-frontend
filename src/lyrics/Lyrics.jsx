@@ -448,8 +448,20 @@ const Lyrics = ({
     syncedLyrics.length > 0
   ) {
     return (
-      <div className="h-full overflow-y-auto px-4 py-12 sm:px-8 lg:px-12">
-        <div className="mx-auto w-full max-w-3xl">
+      <div
+        className="
+          h-full
+          overflow-y-auto
+          px-4
+          py-12
+          sm:px-8
+          lg:px-12
+          [scrollbar-width:none]
+          [-ms-overflow-style:none]
+          [&::-webkit-scrollbar]:hidden
+        "
+      >
+        <div className="mx-auto w-full max-w-3xl text-center">
           <div className="space-y-1">
             {syncedLyrics.map(
               (line, index) => {
@@ -503,8 +515,20 @@ const Lyrics = ({
       : [];
 
   return (
-    <div className="h-full overflow-y-auto px-4 py-12 sm:px-8 lg:px-12">
-      <div className="mx-auto w-full max-w-3xl">
+    <div
+      className="
+        h-full
+        overflow-y-auto
+        px-4
+        py-12
+        sm:px-8
+        lg:px-12
+        [scrollbar-width:none]
+        [-ms-overflow-style:none]
+        [&::-webkit-scrollbar]:hidden
+      "
+    >
+      <div className="mx-auto w-full max-w-3xl text-center">
         <div className="space-y-2">
           {plainLines.map(
             (line, index) => (

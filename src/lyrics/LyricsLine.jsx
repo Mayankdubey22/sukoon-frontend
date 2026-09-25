@@ -15,7 +15,7 @@ const LyricsLine = ({
       type="button"
       onClick={onClick}
       className={`
-        block w-full text-left
+        block w-full text-center
         px-2 py-1.5
         transition-all duration-300 ease-out
         cursor-pointer

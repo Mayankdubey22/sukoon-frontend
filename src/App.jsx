@@ -35,7 +35,6 @@ import {
 } from './LibraryContext';
 
 import Sidebar from './components/Sidebar';
-import NowPlayingSidebar from './components/NowPlayingSidebar';
 import GlobalPlayer from './components/GlobalPlayer';
 
 import HomePage from './pages/HomePage';
@@ -290,11 +289,6 @@ function Layout() {
   const [
     isListening,
     setIsListening,
-  ] = useState(false);
-
-  const [
-    isNowPlayingSidebarOpen,
-    setIsNowPlayingSidebarOpen,
   ] = useState(false);
 
   const recognitionRef =
@@ -762,40 +756,13 @@ function Layout() {
           </Routes>
         </main>
 
-        {/* =================================================
-            NOW PLAYING SIDEBAR
-        ================================================= */}
-
-        {isNowPlayingSidebarOpen && (
-          <div
-            className="
-              hidden
-              h-[calc(100vh-64px)]
-              w-[280px]
-              shrink-0
-              border-l
-              border-white/5
-              lg:flex
-              xl:w-[320px]
-              2xl:w-[340px]
-            "
-          >
-            <NowPlayingSidebar />
-          </div>
-        )}
       </div>
 
       {/* ===================================================
           GLOBAL PLAYER
       =================================================== */}
 
-      <GlobalPlayer
-        onDesktopArtworkClick={() =>
-          setIsNowPlayingSidebarOpen(
-            (open) => !open
-          )
-        }
-      />
+      <GlobalPlayer />
 
       {/* ===================================================
           MOBILE NAVIGATION
