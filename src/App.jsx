@@ -9,16 +9,19 @@ import {
   Route,
   useNavigate,
   useLocation,
+  Navigate,
 } from 'react-router-dom';
 
 import {
-  ArrowLeft,
   Home,
   Search,
   Library,
   Heart,
   Mic,
   MicOff,
+  User,
+  LogOut,
+  ChevronDown,
 } from 'lucide-react';
 
 import {
@@ -34,6 +37,11 @@ import {
   LibraryProvider,
 } from './LibraryContext';
 
+import {
+  AuthProvider,
+  useAuth,
+} from './AuthContext';
+
 import Sidebar from './components/Sidebar';
 import GlobalPlayer from './components/GlobalPlayer';
 
@@ -46,13 +54,10 @@ import LocalPlaylistPage from './pages/LocalPlaylistPage';
 import LikedSongsPage from './pages/LikedSongsPage';
 import LibraryPage from './pages/LibraryPage';
 
+import AuthPage from './pages/AuthPage';
+import VerifyEmail from './pages/VerifyEmail';
+import WelcomeModal from './components/WelcomeModal';
 import './App.css';
-
-const decodeHtml = (text = '') => {
-  const txt = document.createElement('textarea');
-  txt.innerHTML = text;
-  return txt.value;
-};
 
 /* =========================================================
    MAIN CONTENT
@@ -141,11 +146,10 @@ function MobileBottomNav() {
       transition-all
       duration-200
       active:scale-95
-      ${
-        active
-          ? 'text-white'
-          : 'text-gray-400 hover:bg-white/5 hover:text-white'
-      }
+      ${active
+      ? 'text-white'
+      : 'text-gray-400 hover:bg-white/5 hover:text-white'
+    }
     `;
 
   return (
@@ -215,10 +219,9 @@ function MobileBottomNav() {
         type="button"
         className={`
           ${navButtonClass(isLikedActive)}
-          ${
-            isLikedActive
-              ? 'text-[#1db954]'
-              : ''
+          ${isLikedActive
+            ? 'text-[#1db954]'
+            : ''
           }
         `}
         onClick={() => {
@@ -248,10 +251,9 @@ function MobileBottomNav() {
         type="button"
         className={`
           ${navButtonClass(isLibraryActive)}
-          ${
-            isLibraryActive
-              ? 'text-[#1db954]'
-              : ''
+          ${isLibraryActive
+            ? 'text-[#1db954]'
+            : ''
           }
         `}
         onClick={() => {
@@ -274,7 +276,7 @@ function MobileBottomNav() {
 }
 
 /* =========================================================
-   LAYOUT
+   MAIN LAYOUT
 ========================================================= */
 
 function Layout() {
@@ -282,6 +284,30 @@ function Layout() {
     query,
     updateQuery,
   } = useSearch();
+
+  const {
+    user,
+    isAuthenticated,
+    logout,
+  } = useAuth();
+
+  const [welcomeType, setWelcomeType] =
+    useState(null);
+
+  useEffect(() => {
+    const savedWelcomeType =
+      sessionStorage.getItem(
+        'sukoon_welcome_type'
+      );
+
+    if (savedWelcomeType) {
+      setWelcomeType(savedWelcomeType);
+
+      sessionStorage.removeItem(
+        'sukoon_welcome_type'
+      );
+    }
+  }, []);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -291,12 +317,13 @@ function Layout() {
     setIsListening,
   ] = useState(false);
 
+  const [
+    showAccountMenu,
+    setShowAccountMenu,
+  ] = useState(false);
+
   const recognitionRef =
     useRef(null);
-
-  const isOnHome =
-    location.pathname === '/' &&
-    !query.trim();
 
   /* -------------------------------------------------------
      HOME
@@ -405,7 +432,21 @@ function Layout() {
   };
 
   /* -------------------------------------------------------
-     CLEANUP VOICE SEARCH
+     LOGOUT
+  ------------------------------------------------------- */
+
+  const handleLogout = () => {
+    setShowAccountMenu(false);
+
+    logout();
+
+    navigate('/auth', {
+      replace: true,
+    });
+  };
+
+  /* -------------------------------------------------------
+     CLEANUP
   ------------------------------------------------------- */
 
   useEffect(() => {
@@ -413,6 +454,10 @@ function Layout() {
       recognitionRef.current?.stop();
     };
   }, []);
+
+  useEffect(() => {
+    setShowAccountMenu(false);
+  }, [location.pathname]);
 
   return (
     <div
@@ -491,11 +536,12 @@ function Layout() {
                 md:w-9
               "
             />
+
             <span>Sukoon</span>
           </span>
         </button>
 
-        {/* SEARCH SECTION */}
+        {/* SEARCH */}
 
         <div
           className="
@@ -528,7 +574,6 @@ function Layout() {
               w-9
               shrink-0
               items-center
-              sm:hidden
               justify-center
               overflow-hidden
               rounded-lg
@@ -538,6 +583,7 @@ function Layout() {
               focus:outline-none
               focus:ring-2
               focus:ring-white/20
+              sm:hidden
               sm:h-10
               sm:w-10
             "
@@ -549,8 +595,6 @@ function Layout() {
                 h-8
                 w-8
                 object-contain
-                sm:h-9
-                sm:w-9
               "
             />
           </button>
@@ -586,7 +630,6 @@ function Layout() {
                 shrink-0
                 text-gray-400
                 sm:mr-3
-                sm:size-[19px]
               "
             />
 
@@ -635,16 +678,15 @@ function Layout() {
                 duration-200
                 focus:outline-none
                 sm:ml-2
-                ${
-                  isListening
-                    ? `
+                ${isListening
+                  ? `
                       bg-red-500
                       text-white
                       shadow-lg
                       shadow-red-500/30
                       hover:bg-red-600
                     `
-                    : `
+                  : `
                       text-gray-400
                       hover:bg-white/10
                       hover:text-white
@@ -661,7 +703,234 @@ function Layout() {
           </div>
         </div>
 
+        {/* ACCOUNT */}
 
+        <div
+          className="
+            relative
+            ml-auto
+            shrink-0
+          "
+        >
+          {isAuthenticated && user ? (
+            <>
+              <button
+                type="button"
+                onClick={() =>
+                  setShowAccountMenu(
+                    (previous) => !previous
+                  )
+                }
+                className="
+                  flex
+                  h-10
+                  items-center
+                  gap-2
+                  rounded-full
+                  border
+                  border-white/10
+                  bg-[#242424]
+                  px-2
+                  pr-3
+                  text-white
+                  transition
+                  duration-200
+                  hover:bg-[#2d2d2d]
+                  focus:outline-none
+                  focus:ring-2
+                  focus:ring-white/10
+                "
+                aria-label="Account menu"
+                aria-expanded={showAccountMenu}
+              >
+                <div
+                  className="
+                    flex
+                    h-8
+                    w-8
+                    shrink-0
+                    items-center
+                    justify-center
+                    overflow-hidden
+                    rounded-full
+                    bg-[#333]
+                    text-gray-200
+                  "
+                >
+                  {user.profileImage ? (
+                    <img
+                      src={user.profileImage}
+                      alt={user.name || 'User'}
+                      className="
+                        h-full
+                        w-full
+                        object-cover
+                      "
+                    />
+                  ) : (
+                    <User size={17} />
+                  )}
+                </div>
+
+                <span
+                  className="
+                    hidden
+                    max-w-[120px]
+                    truncate
+                    text-sm
+                    font-medium
+                    sm:block
+                  "
+                >
+                  {user.name || 'Account'}
+                </span>
+
+                <ChevronDown
+                  size={16}
+                  className={`
+                    hidden
+                    text-gray-400
+                    transition-transform
+                    sm:block
+                    ${showAccountMenu
+                      ? 'rotate-180'
+                      : ''
+                    }
+                  `}
+                />
+              </button>
+
+              {showAccountMenu && (
+                <div
+                  className="
+                    absolute
+                    right-0
+                    top-[calc(100%+8px)]
+                    z-[100]
+                    w-64
+                    overflow-hidden
+                    rounded-xl
+                    border
+                    border-white/10
+                    bg-[#181818]
+                    shadow-2xl
+                    shadow-black/50
+                  "
+                >
+                  <div
+                    className="
+                      border-b
+                      border-white/10
+                      px-4
+                      py-3
+                    "
+                  >
+                    <p
+                      className="
+                        truncate
+                        text-sm
+                        font-semibold
+                        text-white
+                      "
+                    >
+                      {user.name ||
+                        'Sukoon User'}
+                    </p>
+
+                    <p
+                      className="
+                        mt-1
+                        truncate
+                        text-xs
+                        text-gray-500
+                      "
+                    >
+                      {user.email}
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAccountMenu(false);
+                      navigate('/liked');
+                    }}
+                    className="
+                      flex
+                      w-full
+                      items-center
+                      gap-3
+                      px-4
+                      py-3
+                      text-left
+                      text-sm
+                      text-gray-300
+                      transition
+                      hover:bg-white/5
+                      hover:text-white
+                    "
+                  >
+                    <Heart size={17} />
+                    Liked Songs
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAccountMenu(false);
+                      navigate('/library');
+                    }}
+                    className="
+                      flex
+                      w-full
+                      items-center
+                      gap-3
+                      px-4
+                      py-3
+                      text-left
+                      text-sm
+                      text-gray-300
+                      transition
+                      hover:bg-white/5
+                      hover:text-white
+                    "
+                  >
+                    <Library size={17} />
+                    Your Library
+                  </button>
+
+                  <div
+                    className="
+                      border-t
+                      border-white/10
+                    "
+                  />
+
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="
+                      flex
+                      w-full
+                      items-center
+                      gap-3
+                      px-4
+                      py-3
+                      text-left
+                      text-sm
+                      text-red-400
+                      transition
+                      hover:bg-red-500/10
+                    "
+                  >
+                    <LogOut size={17} />
+                    Log out
+                  </button>
+                </div>
+              )}
+            </>
+          ) : null}
+        </div>
       </header>
 
       {/* ===================================================
@@ -679,9 +948,7 @@ function Layout() {
           md:pb-24
         "
       >
-        {/* =================================================
-            SIDEBAR
-        ================================================= */}
+        {/* SIDEBAR */}
 
         <div
           className="
@@ -697,9 +964,7 @@ function Layout() {
           <Sidebar />
         </div>
 
-        {/* =================================================
-            PAGE CONTENT
-        ================================================= */}
+        {/* PAGE CONTENT */}
 
         <main
           key={location.pathname}
@@ -730,23 +995,17 @@ function Layout() {
 
             <Route
               path="/playlist/local/:id"
-              element={
-                <LocalPlaylistPage />
-              }
+              element={<LocalPlaylistPage />}
             />
 
             <Route
               path="/playlist/:id"
-              element={
-                <PlaylistPage />
-              }
+              element={<PlaylistPage />}
             />
 
             <Route
               path="/liked"
-              element={
-                <LikedSongsPage />
-              }
+              element={<LikedSongsPage />}
             />
 
             <Route
@@ -755,22 +1014,130 @@ function Layout() {
             />
           </Routes>
         </main>
-
       </div>
 
-      {/* ===================================================
-          GLOBAL PLAYER
-      =================================================== */}
+      {/* GLOBAL PLAYER */}
 
       <GlobalPlayer />
 
-      {/* ===================================================
-          MOBILE NAVIGATION
-      =================================================== */}
+      {/* MOBILE NAVIGATION */}
 
       <MobileBottomNav />
+
+      {welcomeType && (
+        <WelcomeModal
+          type={welcomeType}
+          userName={user?.name || 'there'}
+          onClose={() =>
+            setWelcomeType(null)
+          }
+        />
+      )}
     </div>
   );
+}
+
+/* =========================================================
+   APP CONTENT
+========================================================= */
+
+function AppContent() {
+  const location = useLocation();
+
+  const {
+    isAuthenticated,
+    loading,
+  } = useAuth();
+
+  /* -------------------------------------------------------
+     AUTH PAGES
+  ------------------------------------------------------- */
+
+  if (
+    location.pathname === '/auth' ||
+    location.pathname === '/verify-email'
+  ) {
+    return (
+      <Routes>
+        <Route
+          path="/auth"
+          element={
+            isAuthenticated ? (
+              <Navigate
+                to="/"
+                replace
+              />
+            ) : (
+              <AuthPage />
+            )
+          }
+        />
+
+        <Route
+          path="/verify-email"
+          element={<VerifyEmail />}
+        />
+      </Routes>
+    );
+  }
+
+  /* -------------------------------------------------------
+     WAIT FOR AUTH INITIALIZATION
+  ------------------------------------------------------- */
+
+  if (loading) {
+    return (
+      <div
+        className="
+          fixed
+          inset-0
+          flex
+          items-center
+          justify-center
+          bg-[#08090c]
+          text-white
+        "
+      >
+        <div className="text-center">
+          <img
+            src="/sukoon-logo.png"
+            alt="Sukoon"
+            className="
+              mx-auto
+              mb-4
+              h-14
+              w-14
+              animate-pulse
+              object-contain
+            "
+          />
+
+          <p className="text-sm text-gray-500">
+            Loading Sukoon...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  /* -------------------------------------------------------
+     NOT AUTHENTICATED
+  ------------------------------------------------------- */
+
+  if (!isAuthenticated) {
+    return (
+      <Navigate
+        to="/auth"
+        replace
+      />
+    );
+  }
+
+  /* -------------------------------------------------------
+     AUTHENTICATED
+  ------------------------------------------------------- */
+
+  return <Layout />;
 }
 
 /* =========================================================
@@ -779,13 +1146,15 @@ function Layout() {
 
 function App() {
   return (
-    <PlayerProvider>
-      <SearchProvider>
-        <LibraryProvider>
-          <Layout />
-        </LibraryProvider>
-      </SearchProvider>
-    </PlayerProvider>
+    <AuthProvider>
+      <PlayerProvider>
+        <SearchProvider>
+          <LibraryProvider>
+            <AppContent />
+          </LibraryProvider>
+        </SearchProvider>
+      </PlayerProvider>
+    </AuthProvider>
   );
 }
 
