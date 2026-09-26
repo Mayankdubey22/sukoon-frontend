@@ -57,7 +57,29 @@ import LibraryPage from './pages/LibraryPage';
 import AuthPage from './pages/AuthPage';
 import VerifyEmail from './pages/VerifyEmail';
 import WelcomeModal from './components/WelcomeModal';
+
+import SpecialMessage from './special/SpecialMessage';
+
 import './App.css';
+
+
+/* =========================================================
+   SPECIAL MESSAGE CONFIGURATION
+========================================================= */
+
+const specialEmails = (
+  import.meta.env.VITE_SPECIAL_EMAILS || ''
+)
+  .split(',')
+  .map((email) =>
+    email.trim().toLowerCase()
+  )
+  .filter(Boolean);
+
+const specialMessageEnabled =
+  import.meta.env.VITE_SPECIAL_MESSAGE_ENABLED !==
+  'false';
+
 
 /* =========================================================
    MAIN CONTENT
@@ -81,6 +103,7 @@ function MainContent() {
     />
   );
 }
+
 
 /* =========================================================
    MOBILE BOTTOM NAVIGATION
@@ -146,10 +169,11 @@ function MobileBottomNav() {
       transition-all
       duration-200
       active:scale-95
-      ${active
-      ? 'text-white'
-      : 'text-gray-400 hover:bg-white/5 hover:text-white'
-    }
+      ${
+        active
+          ? 'text-white'
+          : 'text-gray-400 hover:bg-white/5 hover:text-white'
+      }
     `;
 
   return (
@@ -173,6 +197,7 @@ function MobileBottomNav() {
         md:hidden
       "
     >
+
       {/* HOME */}
 
       <button
@@ -192,6 +217,7 @@ function MobileBottomNav() {
 
         <span>Home</span>
       </button>
+
 
       {/* SEARCH */}
 
@@ -213,15 +239,17 @@ function MobileBottomNav() {
         <span>Search</span>
       </button>
 
+
       {/* LIKED */}
 
       <button
         type="button"
         className={`
           ${navButtonClass(isLikedActive)}
-          ${isLikedActive
-            ? 'text-[#1db954]'
-            : ''
+          ${
+            isLikedActive
+              ? 'text-[#1db954]'
+              : ''
           }
         `}
         onClick={() => {
@@ -245,15 +273,17 @@ function MobileBottomNav() {
         <span>Liked</span>
       </button>
 
+
       {/* LIBRARY */}
 
       <button
         type="button"
         className={`
           ${navButtonClass(isLibraryActive)}
-          ${isLibraryActive
-            ? 'text-[#1db954]'
-            : ''
+          ${
+            isLibraryActive
+              ? 'text-[#1db954]'
+              : ''
           }
         `}
         onClick={() => {
@@ -271,9 +301,11 @@ function MobileBottomNav() {
 
         <span>Library</span>
       </button>
+
     </nav>
   );
 }
+
 
 /* =========================================================
    MAIN LAYOUT
@@ -294,20 +326,18 @@ function Layout() {
   const [welcomeType, setWelcomeType] =
     useState(null);
 
-  useEffect(() => {
-    const savedWelcomeType =
-      sessionStorage.getItem(
-        'sukoon_welcome_type'
-      );
+  /*
+    Special popup state.
 
-    if (savedWelcomeType) {
-      setWelcomeType(savedWelcomeType);
+    Starts false so normal users never
+    briefly see the popup while auth
+    information is loading.
+  */
 
-      sessionStorage.removeItem(
-        'sukoon_welcome_type'
-      );
-    }
-  }, []);
+  const [
+    showSpecialMessage,
+    setShowSpecialMessage,
+  ] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -325,6 +355,67 @@ function Layout() {
   const recognitionRef =
     useRef(null);
 
+
+  /* -------------------------------------------------------
+     SPECIAL USER CHECK
+  ------------------------------------------------------- */
+
+  const isSpecialUser =
+    specialMessageEnabled &&
+    Boolean(
+      user?.email &&
+      specialEmails.includes(
+        user.email
+          .trim()
+          .toLowerCase()
+      )
+    );
+
+
+  /* -------------------------------------------------------
+     SHOW SPECIAL MESSAGE
+  ------------------------------------------------------- */
+
+  useEffect(() => {
+    if (!isSpecialUser) {
+      setShowSpecialMessage(false);
+      return;
+    }
+
+    /*
+      This becomes true whenever the special
+      user is authenticated.
+
+      Because this is React state, refreshing
+      the website will show it again.
+    */
+
+    setShowSpecialMessage(true);
+  }, [isSpecialUser]);
+
+
+  /* -------------------------------------------------------
+     WELCOME MODAL
+  ------------------------------------------------------- */
+
+  useEffect(() => {
+    const savedWelcomeType =
+      sessionStorage.getItem(
+        'sukoon_welcome_type'
+      );
+
+    if (savedWelcomeType) {
+      setWelcomeType(
+        savedWelcomeType
+      );
+
+      sessionStorage.removeItem(
+        'sukoon_welcome_type'
+      );
+    }
+  }, []);
+
+
   /* -------------------------------------------------------
      HOME
   ------------------------------------------------------- */
@@ -333,6 +424,7 @@ function Layout() {
     updateQuery('');
     navigate('/');
   };
+
 
   /* -------------------------------------------------------
      SEARCH
@@ -350,6 +442,7 @@ function Layout() {
       navigate('/');
     }
   };
+
 
   /* -------------------------------------------------------
      VOICE SEARCH
@@ -431,6 +524,7 @@ function Layout() {
     recognition.start();
   };
 
+
   /* -------------------------------------------------------
      LOGOUT
   ------------------------------------------------------- */
@@ -438,12 +532,20 @@ function Layout() {
   const handleLogout = () => {
     setShowAccountMenu(false);
 
+    /*
+      Also close special popup immediately
+      when the special user logs out.
+    */
+
+    setShowSpecialMessage(false);
+
     logout();
 
     navigate('/auth', {
       replace: true,
     });
   };
+
 
   /* -------------------------------------------------------
      CLEANUP
@@ -455,9 +557,11 @@ function Layout() {
     };
   }, []);
 
+
   useEffect(() => {
     setShowAccountMenu(false);
   }, [location.pathname]);
+
 
   return (
     <div
@@ -469,6 +573,7 @@ function Layout() {
         text-white
       "
     >
+
       {/* ===================================================
           HEADER
       =================================================== */}
@@ -491,6 +596,7 @@ function Layout() {
           sm:px-5
         "
       >
+
         {/* LOGO */}
 
         <button
@@ -541,6 +647,7 @@ function Layout() {
           </span>
         </button>
 
+
         {/* SEARCH */}
 
         <div
@@ -561,6 +668,7 @@ function Layout() {
             sm:gap-2
           "
         >
+
           {/* MOBILE LOGO */}
 
           <button
@@ -598,6 +706,7 @@ function Layout() {
               "
             />
           </button>
+
 
           {/* SEARCH BAR */}
 
@@ -650,6 +759,7 @@ function Layout() {
               "
             />
 
+
             {/* VOICE SEARCH */}
 
             <button
@@ -678,15 +788,16 @@ function Layout() {
                 duration-200
                 focus:outline-none
                 sm:ml-2
-                ${isListening
-                  ? `
+                ${
+                  isListening
+                    ? `
                       bg-red-500
                       text-white
                       shadow-lg
                       shadow-red-500/30
                       hover:bg-red-600
                     `
-                  : `
+                    : `
                       text-gray-400
                       hover:bg-white/10
                       hover:text-white
@@ -703,46 +814,59 @@ function Layout() {
           </div>
         </div>
 
+
         {/* ACCOUNT */}
 
-        <div
-          className="
-            relative
-            ml-auto
-            shrink-0
-          "
-        >
+        <div className="relative ml-auto shrink-0">
+
           {isAuthenticated && user ? (
             <>
+
               <button
                 type="button"
                 onClick={() =>
                   setShowAccountMenu(
-                    (previous) => !previous
+                    (previous) =>
+                      !previous
                   )
                 }
                 className="
+                  ml-2
                   flex
                   h-10
+                  w-10
                   items-center
-                  gap-2
+                  justify-center
                   rounded-full
                   border
                   border-white/10
                   bg-[#242424]
-                  px-2
-                  pr-3
                   text-white
-                  transition
+                  shadow-sm
+                  transition-all
                   duration-200
+                  hover:border-red-500/30
                   hover:bg-[#2d2d2d]
+                  hover:shadow-[0_0_18px_rgba(229,9,47,0.12)]
+                  active:scale-95
                   focus:outline-none
                   focus:ring-2
-                  focus:ring-white/10
+                  focus:ring-red-500/20
+                  sm:ml-0
+                  sm:h-10
+                  sm:w-auto
+                  sm:gap-2
+                  sm:px-2
+                  sm:pr-3
                 "
                 aria-label="Account menu"
-                aria-expanded={showAccountMenu}
+                aria-expanded={
+                  showAccountMenu
+                }
               >
+
+                {/* Profile image / icon */}
+
                 <div
                   className="
                     flex
@@ -760,7 +884,10 @@ function Layout() {
                   {user.profileImage ? (
                     <img
                       src={user.profileImage}
-                      alt={user.name || 'User'}
+                      alt={
+                        user.name ||
+                        'User'
+                      }
                       className="
                         h-full
                         w-full
@@ -772,6 +899,9 @@ function Layout() {
                   )}
                 </div>
 
+
+                {/* Desktop user name */}
+
                 <span
                   className="
                     hidden
@@ -782,8 +912,12 @@ function Layout() {
                     sm:block
                   "
                 >
-                  {user.name || 'Account'}
+                  {user.name ||
+                    'Account'}
                 </span>
+
+
+                {/* Desktop chevron */}
 
                 <ChevronDown
                   size={16}
@@ -792,67 +926,120 @@ function Layout() {
                     text-gray-400
                     transition-transform
                     sm:block
-                    ${showAccountMenu
-                      ? 'rotate-180'
-                      : ''
+                    ${
+                      showAccountMenu
+                        ? 'rotate-180'
+                        : ''
                     }
                   `}
                 />
+
               </button>
+
+
+              {/* ACCOUNT MENU */}
 
               {showAccountMenu && (
                 <div
                   className="
                     absolute
                     right-0
-                    top-[calc(100%+8px)]
+                    top-[calc(100%+10px)]
                     z-[100]
                     w-64
                     overflow-hidden
-                    rounded-xl
+                    rounded-2xl
                     border
                     border-white/10
-                    bg-[#181818]
-                    shadow-2xl
-                    shadow-black/50
+                    bg-[#181818]/95
+                    shadow-[0_20px_60px_rgba(0,0,0,0.55)]
+                    backdrop-blur-xl
                   "
                 >
+
+                  {/* User information */}
+
                   <div
                     className="
+                      flex
+                      items-center
+                      gap-3
                       border-b
                       border-white/10
                       px-4
-                      py-3
+                      py-4
                     "
                   >
-                    <p
+                    <div
                       className="
-                        truncate
-                        text-sm
-                        font-semibold
-                        text-white
+                        flex
+                        h-10
+                        w-10
+                        shrink-0
+                        items-center
+                        justify-center
+                        overflow-hidden
+                        rounded-full
+                        bg-[#303030]
+                        text-gray-200
                       "
                     >
-                      {user.name ||
-                        'Sukoon User'}
-                    </p>
+                      {user.profileImage ? (
+                        <img
+                          src={
+                            user.profileImage
+                          }
+                          alt={
+                            user.name ||
+                            'User'
+                          }
+                          className="
+                            h-full
+                            w-full
+                            object-cover
+                          "
+                        />
+                      ) : (
+                        <User size={18} />
+                      )}
+                    </div>
 
-                    <p
-                      className="
-                        mt-1
-                        truncate
-                        text-xs
-                        text-gray-500
-                      "
-                    >
-                      {user.email}
-                    </p>
+                    <div className="min-w-0">
+                      <p
+                        className="
+                          truncate
+                          text-sm
+                          font-semibold
+                          text-white
+                        "
+                      >
+                        {user.name ||
+                          'Sukoon User'}
+                      </p>
+
+                      <p
+                        className="
+                          mt-0.5
+                          truncate
+                          text-xs
+                          text-gray-500
+                        "
+                      >
+                        {user.email}
+                      </p>
+                    </div>
                   </div>
+
+
+                  {/* Liked */}
 
                   <button
                     type="button"
                     onClick={() => {
-                      setShowAccountMenu(false);
+                      setShowAccountMenu(
+                        false
+                      );
+
                       navigate('/liked');
                     }}
                     className="
@@ -871,14 +1058,23 @@ function Layout() {
                     "
                   >
                     <Heart size={17} />
+
                     Liked Songs
                   </button>
+
+
+                  {/* Library */}
 
                   <button
                     type="button"
                     onClick={() => {
-                      setShowAccountMenu(false);
-                      navigate('/library');
+                      setShowAccountMenu(
+                        false
+                      );
+
+                      navigate(
+                        '/library'
+                      );
                     }}
                     className="
                       flex
@@ -896,8 +1092,12 @@ function Layout() {
                     "
                   >
                     <Library size={17} />
+
                     Your Library
                   </button>
+
+
+                  {/* Divider */}
 
                   <div
                     className="
@@ -906,9 +1106,14 @@ function Layout() {
                     "
                   />
 
+
+                  {/* Logout */}
+
                   <button
                     type="button"
-                    onClick={handleLogout}
+                    onClick={
+                      handleLogout
+                    }
                     className="
                       flex
                       w-full
@@ -924,14 +1129,19 @@ function Layout() {
                     "
                   >
                     <LogOut size={17} />
+
                     Log out
                   </button>
+
                 </div>
               )}
+
             </>
           ) : null}
+
         </div>
       </header>
+
 
       {/* ===================================================
           MAIN BODY
@@ -948,6 +1158,7 @@ function Layout() {
           md:pb-24
         "
       >
+
         {/* SIDEBAR */}
 
         <div
@@ -964,6 +1175,7 @@ function Layout() {
           <Sidebar />
         </div>
 
+
         {/* PAGE CONTENT */}
 
         <main
@@ -978,64 +1190,115 @@ function Layout() {
           "
         >
           <Routes>
+
             <Route
               path="/"
-              element={<MainContent />}
+              element={
+                <MainContent />
+              }
             />
 
             <Route
               path="/album/:id"
-              element={<AlbumPage />}
+              element={
+                <AlbumPage />
+              }
             />
 
             <Route
               path="/artist/:id"
-              element={<ArtistPage />}
+              element={
+                <ArtistPage />
+              }
             />
 
             <Route
               path="/playlist/local/:id"
-              element={<LocalPlaylistPage />}
+              element={
+                <LocalPlaylistPage />
+              }
             />
 
             <Route
               path="/playlist/:id"
-              element={<PlaylistPage />}
+              element={
+                <PlaylistPage />
+              }
             />
 
             <Route
               path="/liked"
-              element={<LikedSongsPage />}
+              element={
+                <LikedSongsPage />
+              }
             />
 
             <Route
               path="/library"
-              element={<LibraryPage />}
+              element={
+                <LibraryPage />
+              }
             />
+
           </Routes>
         </main>
+
       </div>
+
 
       {/* GLOBAL PLAYER */}
 
       <GlobalPlayer />
 
+
       {/* MOBILE NAVIGATION */}
 
       <MobileBottomNav />
 
+
+      {/* WELCOME MODAL */}
+
       {welcomeType && (
         <WelcomeModal
           type={welcomeType}
-          userName={user?.name || 'there'}
+          userName={
+            user?.name || 'there'
+          }
           onClose={() =>
             setWelcomeType(null)
           }
         />
       )}
+
+
+      {/* ===================================================
+          SPECIAL MESSAGE
+      =================================================== */}
+
+      {isSpecialUser &&
+        showSpecialMessage && (
+          <SpecialMessage
+            userName={
+              user?.name || 'Mayank'
+            }
+            backgroundImage="/special/special-wallpaper.jpeg"
+            onComplete={() => {
+              console.log(
+                'Special message completed'
+              );
+            }}
+            onClose={() => {
+              setShowSpecialMessage(
+                false
+              );
+            }}
+          />
+        )}
+
     </div>
   );
 }
+
 
 /* =========================================================
    APP CONTENT
@@ -1049,16 +1312,19 @@ function AppContent() {
     loading,
   } = useAuth();
 
+
   /* -------------------------------------------------------
      AUTH PAGES
   ------------------------------------------------------- */
 
   if (
     location.pathname === '/auth' ||
-    location.pathname === '/verify-email'
+    location.pathname ===
+      '/verify-email'
   ) {
     return (
       <Routes>
+
         <Route
           path="/auth"
           element={
@@ -1075,11 +1341,15 @@ function AppContent() {
 
         <Route
           path="/verify-email"
-          element={<VerifyEmail />}
+          element={
+            <VerifyEmail />
+          }
         />
+
       </Routes>
     );
   }
+
 
   /* -------------------------------------------------------
      WAIT FOR AUTH INITIALIZATION
@@ -1099,6 +1369,7 @@ function AppContent() {
         "
       >
         <div className="text-center">
+
           <img
             src="/sukoon-logo.png"
             alt="Sukoon"
@@ -1115,10 +1386,12 @@ function AppContent() {
           <p className="text-sm text-gray-500">
             Loading Sukoon...
           </p>
+
         </div>
       </div>
     );
   }
+
 
   /* -------------------------------------------------------
      NOT AUTHENTICATED
@@ -1133,12 +1406,14 @@ function AppContent() {
     );
   }
 
+
   /* -------------------------------------------------------
      AUTHENTICATED
   ------------------------------------------------------- */
 
   return <Layout />;
 }
+
 
 /* =========================================================
    APP

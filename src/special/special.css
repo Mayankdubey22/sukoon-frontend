@@ -1,0 +1,1103 @@
+/* =====================================================
+   SUKOON SPECIAL MESSAGE
+   FINAL VERSION
+===================================================== */
+
+
+/* =====================================================
+   MAIN OVERLAY
+===================================================== */
+
+.special-overlay {
+  position: fixed;
+  inset: 0;
+
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  height: 100%;
+
+  padding: 20px;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  background: #050505;
+}
+
+
+/* =====================================================
+   PAGE 1 & PAGE 2
+   NO PHOTO
+===================================================== */
+
+.special-no-image {
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(229, 9, 47, 0.10),
+      transparent 55%
+    ),
+    #050505;
+}
+
+
+/* =====================================================
+   DARK OVERLAY FOR PAGE 1 / PAGE 2
+===================================================== */
+
+.special-dark-overlay {
+  position: absolute;
+  inset: 0;
+
+  z-index: 0;
+
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(229, 9, 47, 0.08),
+      transparent 55%
+    ),
+    rgba(0, 0, 0, 0.35);
+}
+
+
+/* =====================================================
+   MAIN POPUP CARD
+===================================================== */
+
+.special-card {
+  position: relative;
+
+  z-index: 2;
+
+  width: 100%;
+  max-width: 460px;
+
+  max-height:
+    calc(100vh - 40px);
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  padding:
+    38px
+    28px
+    28px;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.14);
+
+  border-radius: 28px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(18, 18, 22, 0.97),
+      rgba(8, 8, 11, 0.97)
+    );
+
+  box-shadow:
+    0 30px 100px
+      rgba(0, 0, 0, 0.75),
+
+    0 0 70px
+      rgba(229, 9, 47, 0.13);
+
+  text-align: center;
+
+  scrollbar-width: none;
+}
+
+.special-card::-webkit-scrollbar {
+  display: none;
+}
+
+
+/* =====================================================
+   POPUP ENTER ANIMATION
+===================================================== */
+
+.special-page-enter {
+  animation:
+    specialPopupEnter
+    0.28s
+    cubic-bezier(
+      0.16,
+      1,
+      0.3,
+      1
+    );
+}
+
+@keyframes specialPopupEnter {
+  0% {
+    opacity: 0;
+
+    transform:
+      translateY(45px)
+      scale(0.88);
+  }
+
+  60% {
+    opacity: 1;
+
+    transform:
+      translateY(-6px)
+      scale(1.015);
+  }
+
+  100% {
+    opacity: 1;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+
+/* =====================================================
+   CLOSE BUTTON
+===================================================== */
+
+.special-close {
+  position: absolute;
+
+  right: 15px;
+  top: 15px;
+
+  z-index: 20;
+
+  display: flex;
+
+  width: 36px;
+  height: 36px;
+
+  align-items: center;
+  justify-content: center;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.10);
+
+  border-radius: 50%;
+
+  background:
+    rgba(0, 0, 0, 0.35);
+
+  color:
+    rgba(255, 255, 255, 0.75);
+
+  cursor: pointer;
+
+  backdrop-filter: blur(8px);
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.special-close:hover {
+  background:
+    rgba(255, 255, 255, 0.12);
+
+  color: white;
+
+  transform:
+    scale(1.06);
+}
+
+.special-close:active {
+  transform:
+    scale(0.92);
+}
+
+
+/* =====================================================
+   SORRY EMOJI BOX
+===================================================== */
+
+.special-sorry-heart {
+  display: flex;
+
+  width: 82px;
+  height: 82px;
+
+  margin:
+    0 auto
+    3px;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 4px;
+
+  border:
+    1px solid
+    rgba(229, 9, 47, 0.25);
+
+  border-radius: 24px;
+
+  background:
+    rgba(229, 9, 47, 0.10);
+
+  box-shadow:
+    0 0 50px
+      rgba(229, 9, 47, 0.20);
+
+  animation:
+    specialSorryBox
+    2s
+    ease-in-out
+    infinite;
+}
+
+.special-sorry-heart.small {
+  width: 70px;
+  height: 70px;
+
+  border-radius: 20px;
+}
+
+.special-sorry-emoji {
+  font-size: 32px;
+
+  animation:
+    specialSorryFloat
+    1.8s
+    ease-in-out
+    infinite;
+}
+
+.special-sorry-heart-emoji {
+  font-size: 30px;
+
+  animation:
+    specialHeartPulse
+    1.1s
+    ease-in-out
+    infinite;
+}
+
+
+/* =====================================================
+   HEADINGS
+===================================================== */
+
+.special-title {
+  margin-top: 15px;
+
+  color: white;
+
+  font-size: 30px;
+
+  font-weight: 800;
+
+  line-height: 1.2;
+
+  letter-spacing: -0.03em;
+}
+
+
+/* =====================================================
+   NORMAL TEXT
+===================================================== */
+
+.special-text {
+  margin:
+    15px auto 0;
+
+  max-width: 390px;
+
+  color:
+    rgba(255, 255, 255, 0.75);
+
+  font-size: 14px;
+
+  line-height: 1.7;
+}
+
+
+/* =====================================================
+   SORRY HIGHLIGHT
+===================================================== */
+
+.special-sorry {
+  margin-top: 20px;
+
+  padding:
+    13px 16px;
+
+  border:
+    1px solid
+    rgba(229, 9, 47, 0.16);
+
+  border-radius: 14px;
+
+  background:
+    rgba(229, 9, 47, 0.08);
+
+  color:
+    rgba(255, 255, 255, 0.92);
+
+  font-size: 14px;
+
+  font-weight: 600;
+}
+
+
+/* =====================================================
+   LOVE MESSAGE
+===================================================== */
+
+.special-love {
+  margin:
+    20px auto;
+
+  max-width: 390px;
+
+  color: white;
+
+  font-size: 16px;
+
+  font-weight: 600;
+
+  line-height: 1.6;
+}
+
+
+/* =====================================================
+   SMALL TEXT
+===================================================== */
+
+.special-small {
+  margin-top: 18px;
+
+  color:
+    rgba(255, 255, 255, 0.40);
+
+  font-size: 11px;
+}
+
+
+/* =====================================================
+   TEXTAREA
+===================================================== */
+
+.special-input-wrapper {
+  margin-top: 20px;
+}
+
+.special-input {
+  width: 100%;
+
+  min-height: 70px;
+
+  resize: none;
+
+  padding:
+    14px 16px;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.10);
+
+  border-radius: 15px;
+
+  outline: none;
+
+  background:
+    rgba(255, 255, 255, 0.06);
+
+  color: white;
+
+  font-family: inherit;
+
+  font-size: 14px;
+
+  line-height: 1.5;
+
+  transition:
+    border 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.special-input::placeholder {
+  color:
+    rgba(255, 255, 255, 0.35);
+}
+
+.special-input:focus {
+  border-color:
+    rgba(229, 9, 47, 0.55);
+
+  background:
+    rgba(255, 255, 255, 0.08);
+
+  box-shadow:
+    0 0 0 3px
+    rgba(229, 9, 47, 0.08);
+}
+
+
+/* =====================================================
+   ERROR
+===================================================== */
+
+.special-error {
+  margin-top: 10px;
+
+  color:
+    #ff6b81;
+
+  font-size: 13px;
+
+  font-weight: 600;
+
+  animation:
+    specialShake
+    0.35s
+    ease;
+}
+
+
+/* =====================================================
+   BUTTON
+===================================================== */
+
+.special-button {
+  display: flex;
+
+  width: 100%;
+  height: 46px;
+
+  margin-top: 22px;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  border: none;
+
+  border-radius: 14px;
+
+  background:
+    #e5092f;
+
+  color: white;
+
+  font-size: 14px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 10px 30px
+      rgba(229, 9, 47, 0.20);
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.special-button:hover {
+  background:
+    #ff1744;
+
+  box-shadow:
+    0 12px 35px
+      rgba(229, 9, 47, 0.30);
+
+  transform:
+    translateY(-1px);
+}
+
+.special-button:active {
+  transform:
+    scale(0.98);
+}
+
+
+/* =====================================================
+   HINT
+===================================================== */
+
+.special-hint {
+  margin-top: 12px;
+
+  color:
+    rgba(255, 255, 255, 0.30);
+
+  font-size: 11px;
+
+  line-height: 1.6;
+}
+
+.special-required {
+  color:
+    rgba(255, 255, 255, 0.70);
+
+  font-weight: 600;
+}
+
+
+/* =====================================================
+   FINAL PAGE
+===================================================== */
+
+.special-final-page {
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(229, 9, 47, 0.10),
+      transparent 60%
+    ),
+    #050505;
+}
+
+
+/* =====================================================
+   FINAL POPUP
+
+   IMPORTANT:
+   The photo will be INSIDE this popup
+   and fill the entire popup.
+===================================================== */
+
+.special-final-card {
+  position: relative;
+
+  isolation: isolate;
+
+  overflow: hidden;
+
+  padding:
+    35px
+    28px
+    28px;
+
+  background:
+    rgba(10, 10, 12, 0.92);
+}
+
+
+/* =====================================================
+   PHOTO
+
+   FULL POPUP SIZE
+===================================================== */
+
+.special-photo-container {
+  position: absolute;
+
+  inset: 0;
+
+  z-index: -2;
+
+  width: 100%;
+  height: 100%;
+
+  margin: 0;
+
+  overflow: hidden;
+
+  border: none;
+
+  border-radius: inherit;
+
+  background:
+    #111;
+
+  box-shadow: none;
+}
+
+
+/* =====================================================
+   PHOTO ITSELF
+===================================================== */
+
+.special-photo {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  object-position: center;
+
+  animation:
+    specialPhotoAppear
+    0.9s
+    ease-out;
+}
+
+@keyframes specialPhotoAppear {
+  from {
+    opacity: 0;
+
+    transform:
+      scale(1.08);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      scale(1);
+  }
+}
+
+
+/* =====================================================
+   DARK PHOTO OVERLAY
+
+   Keeps text readable while
+   allowing the photo to remain visible.
+===================================================== */
+
+.special-photo-container::after {
+  content: '';
+
+  position: absolute;
+
+  inset: 0;
+
+  z-index: 2;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.42) 0%,
+      rgba(0, 0, 0, 0.52) 35%,
+      rgba(0, 0, 0, 0.72) 70%,
+      rgba(0, 0, 0, 0.86) 100%
+    );
+}
+
+
+/* =====================================================
+   FINAL CARD CONTENT
+
+   Keep everything above photo.
+===================================================== */
+
+.special-final-card
+  > *:not(.special-photo-container) {
+  position: relative;
+
+  z-index: 5;
+}
+
+
+/* =====================================================
+   SORRY WORD HEART
+===================================================== */
+
+.sorry-word-heart {
+  display: flex;
+
+  width: 230px;
+  height: 210px;
+
+  margin:
+    0 auto
+    2px;
+
+  align-items: center;
+  justify-content: center;
+
+  filter:
+    drop-shadow(
+      0 0 22px
+      rgba(229, 9, 47, 0.25)
+    );
+
+  animation:
+    sorryHeartAppear
+    0.8s
+    cubic-bezier(
+      0.16,
+      1,
+      0.3,
+      1
+    );
+}
+
+.sorry-heart-svg {
+  width: 100%;
+  height: 100%;
+
+  overflow: visible;
+}
+
+.heart-word {
+  fill:
+    rgba(255, 255, 255, 0.92);
+
+  font-family:
+    Arial,
+    Helvetica,
+    sans-serif;
+
+  font-size: 16px;
+
+  font-weight: 700;
+
+  letter-spacing: 1px;
+}
+
+.heart-word-small {
+  fill:
+    rgba(255, 255, 255, 0.68);
+
+  font-size: 11px;
+
+  font-weight: 600;
+
+  letter-spacing: 0.6px;
+}
+
+@keyframes sorryHeartAppear {
+  from {
+    opacity: 0;
+
+    transform:
+      scale(0.65)
+      translateY(15px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      scale(1)
+      translateY(0);
+  }
+}
+
+
+/* =====================================================
+   FINAL MESSAGE
+===================================================== */
+
+.special-final-message {
+  margin:
+    22px auto;
+
+  max-width: 360px;
+
+  padding:
+    16px;
+
+  border-radius: 16px;
+
+  background:
+    rgba(80, 0, 15, 0.48);
+
+  border:
+    1px solid
+    rgba(255, 70, 100, 0.25);
+
+  color: white;
+
+  font-size: 15px;
+
+  font-weight: 600;
+
+  line-height: 1.6;
+
+  backdrop-filter:
+    blur(8px);
+
+  box-shadow:
+    0 10px 30px
+      rgba(0, 0, 0, 0.20);
+}
+
+
+/* =====================================================
+   SIGNATURE
+===================================================== */
+
+.special-signature {
+  margin-top: 20px;
+
+  color:
+    rgba(255, 255, 255, 0.85);
+
+  font-size: 14px;
+
+  font-style: italic;
+
+  text-shadow:
+    0 2px 8px
+    rgba(0, 0, 0, 0.6);
+}
+
+
+/* =====================================================
+   FINAL BUTTON
+===================================================== */
+
+.special-final-card
+  .special-button {
+  background:
+    #e5092f;
+
+  box-shadow:
+    0 10px 35px
+      rgba(229, 9, 47, 0.35);
+}
+
+.special-final-card
+  .special-button:hover {
+  background:
+    #ff1744;
+}
+
+
+/* =====================================================
+   GENERAL ANIMATIONS
+===================================================== */
+
+@keyframes specialSorryBox {
+  0%,
+  100% {
+    transform:
+      scale(1);
+  }
+
+  50% {
+    transform:
+      scale(1.035);
+  }
+}
+
+@keyframes specialSorryFloat {
+  0%,
+  100% {
+    transform:
+      translateY(0);
+  }
+
+  50% {
+    transform:
+      translateY(-6px);
+  }
+}
+
+@keyframes specialHeartPulse {
+  0%,
+  100% {
+    transform:
+      scale(1);
+  }
+
+  50% {
+    transform:
+      scale(1.15);
+  }
+}
+
+@keyframes specialShake {
+  0%,
+  100% {
+    transform:
+      translateX(0);
+  }
+
+  25% {
+    transform:
+      translateX(-5px);
+  }
+
+  75% {
+    transform:
+      translateX(5px);
+  }
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 480px) {
+
+  .special-overlay {
+    padding:
+      12px;
+  }
+
+  .special-card {
+    max-height:
+      calc(100vh - 24px);
+
+    padding:
+      32px
+      20px
+      22px;
+
+    border-radius:
+      23px;
+  }
+
+  .special-title {
+    font-size:
+      25px;
+  }
+
+  .special-text {
+    font-size:
+      13px;
+  }
+
+  .special-sorry-heart {
+    width:
+      70px;
+
+    height:
+      70px;
+
+    border-radius:
+      20px;
+  }
+
+  .special-sorry-emoji {
+    font-size:
+      27px;
+  }
+
+  .special-sorry-heart-emoji {
+    font-size:
+      26px;
+  }
+
+
+  /* ================================================
+     FINAL POPUP PHOTO
+
+     Now it fills the whole popup.
+  ================================================ */
+
+  .special-final-card {
+    padding:
+      30px
+      20px
+      22px;
+  }
+
+
+  /* ================================================
+     WORD HEART
+  ================================================ */
+
+  .sorry-word-heart {
+    width:
+      210px;
+
+    height:
+      175px;
+  }
+
+  .heart-word {
+    font-size:
+      15px;
+  }
+
+  .heart-word-small {
+    font-size:
+      10px;
+  }
+
+
+  /* ================================================
+     FINAL MESSAGE
+  ================================================ */
+
+  .special-final-message {
+    font-size:
+      13px;
+
+    padding:
+      13px;
+  }
+
+
+  /* ================================================
+     BUTTON
+  ================================================ */
+
+  .special-button {
+    height:
+      44px;
+  }
+}
+
+
+/* =====================================================
+   VERY SMALL PHONES
+===================================================== */
+
+@media (max-width: 360px) {
+
+  .special-overlay {
+    padding:
+      8px;
+  }
+
+  .special-card {
+    padding:
+      28px
+      16px
+      18px;
+
+    border-radius:
+      20px;
+  }
+
+  .special-title {
+    font-size:
+      22px;
+  }
+
+  .special-text {
+    font-size:
+      12px;
+
+    line-height:
+      1.6;
+  }
+
+  .sorry-word-heart {
+    width:
+      190px;
+
+    height:
+      160px;
+  }
+
+  .heart-word {
+    font-size:
+      13px;
+  }
+
+  .heart-word-small {
+    font-size:
+      9px;
+  }
+}
