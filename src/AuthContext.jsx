@@ -11,37 +11,55 @@ const AuthContext = createContext(null);
 
 const TOKEN_KEY = 'sukoon_token';
 
-export const AuthProvider = ({ children }) => {
+export const AuthProvider = ({
+  children,
+}) => {
   const [user, setUser] = useState(null);
+
   const [token, setToken] = useState(
-    () => localStorage.getItem(TOKEN_KEY)
+    () =>
+      localStorage.getItem(
+        TOKEN_KEY
+      )
   );
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] =
+    useState(true);
 
-  const isAuthenticated = Boolean(token && user);
+  const isAuthenticated =
+    Boolean(token && user);
 
   /* =====================================================
      GET CURRENT USER
   ===================================================== */
 
-  const fetchCurrentUser = async (authToken) => {
+  const fetchCurrentUser = async (
+    authToken
+  ) => {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/auth/me`,
-        {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
+      const response =
+        await fetch(
+          `${API_BASE_URL}/api/auth/me`,
+          {
+            method: 'GET',
 
-      const data = await response.json();
+            headers: {
+              Authorization:
+                `Bearer ${authToken}`,
+            },
+          }
+        );
 
-      if (!response.ok || !data.success) {
+      const data =
+        await response.json();
+
+      if (
+        !response.ok ||
+        !data.success
+      ) {
         throw new Error(
-          data?.message || 'Authentication failed'
+          data?.message ||
+            'Authentication failed'
         );
       }
 
@@ -57,9 +75,18 @@ export const AuthProvider = ({ children }) => {
         error
       );
 
-      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(
+        TOKEN_KEY
+      );
+
       setToken(null);
       setUser(null);
+
+      window.dispatchEvent(
+        new Event(
+          'sukoon-auth-changed'
+        )
+      );
 
       return {
         success: false,
@@ -75,21 +102,26 @@ export const AuthProvider = ({ children }) => {
   ===================================================== */
 
   useEffect(() => {
-    const initializeAuth = async () => {
-      const savedToken =
-        localStorage.getItem(TOKEN_KEY);
+    const initializeAuth =
+      async () => {
+        const savedToken =
+          localStorage.getItem(
+            TOKEN_KEY
+          );
 
-      if (!savedToken) {
+        if (!savedToken) {
+          setLoading(false);
+          return;
+        }
+
+        setToken(savedToken);
+
+        await fetchCurrentUser(
+          savedToken
+        );
+
         setLoading(false);
-        return;
-      }
-
-      setToken(savedToken);
-
-      await fetchCurrentUser(savedToken);
-
-      setLoading(false);
-    };
+      };
 
     initializeAuth();
   }, []);
@@ -104,26 +136,35 @@ export const AuthProvider = ({ children }) => {
     password,
   }) => {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/auth/signup`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            name,
-            email,
-            password,
-          }),
-        }
-      );
+      const response =
+        await fetch(
+          `${API_BASE_URL}/api/auth/signup`,
+          {
+            method: 'POST',
 
-      const data = await response.json();
+            headers: {
+              'Content-Type':
+                'application/json',
+            },
 
-      if (!response.ok || !data.success) {
+            body: JSON.stringify({
+              name,
+              email,
+              password,
+            }),
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if (
+        !response.ok ||
+        !data.success
+      ) {
         return {
           success: false,
+
           message:
             data?.message ||
             'Failed to create account',
@@ -143,6 +184,7 @@ export const AuthProvider = ({ children }) => {
 
       return {
         success: false,
+
         message:
           'Unable to connect to the server.',
       };
@@ -158,25 +200,34 @@ export const AuthProvider = ({ children }) => {
     otp,
   }) => {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/auth/verify-email`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email,
-            otp,
-          }),
-        }
-      );
+      const response =
+        await fetch(
+          `${API_BASE_URL}/api/auth/verify-email`,
+          {
+            method: 'POST',
 
-      const data = await response.json();
+            headers: {
+              'Content-Type':
+                'application/json',
+            },
 
-      if (!response.ok || !data.success) {
+            body: JSON.stringify({
+              email,
+              otp,
+            }),
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if (
+        !response.ok ||
+        !data.success
+      ) {
         return {
           success: false,
+
           message:
             data?.message ||
             'Failed to verify email',
@@ -196,6 +247,16 @@ export const AuthProvider = ({ children }) => {
         setUser(data.user);
       }
 
+      /*
+        Tell LibraryContext that a
+        new user session is active.
+      */
+      window.dispatchEvent(
+        new Event(
+          'sukoon-auth-changed'
+        )
+      );
+
       return {
         success: true,
         message: data.message,
@@ -210,6 +271,7 @@ export const AuthProvider = ({ children }) => {
 
       return {
         success: false,
+
         message:
           'Unable to connect to the server.',
       };
@@ -220,26 +282,37 @@ export const AuthProvider = ({ children }) => {
      RESEND OTP
   ===================================================== */
 
-  const resendOtp = async (email) => {
+  const resendOtp = async (
+    email
+  ) => {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/auth/resend-otp`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email,
-          }),
-        }
-      );
+      const response =
+        await fetch(
+          `${API_BASE_URL}/api/auth/resend-otp`,
+          {
+            method: 'POST',
 
-      const data = await response.json();
+            headers: {
+              'Content-Type':
+                'application/json',
+            },
 
-      if (!response.ok || !data.success) {
+            body: JSON.stringify({
+              email,
+            }),
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if (
+        !response.ok ||
+        !data.success
+      ) {
         return {
           success: false,
+
           message:
             data?.message ||
             'Failed to resend OTP',
@@ -258,6 +331,7 @@ export const AuthProvider = ({ children }) => {
 
       return {
         success: false,
+
         message:
           'Unable to connect to the server.',
       };
@@ -273,28 +347,38 @@ export const AuthProvider = ({ children }) => {
     password,
   }) => {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/auth/login`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email,
-            password,
-          }),
-        }
-      );
+      const response =
+        await fetch(
+          `${API_BASE_URL}/api/auth/login`,
+          {
+            method: 'POST',
 
-      const data = await response.json();
+            headers: {
+              'Content-Type':
+                'application/json',
+            },
 
-      if (!response.ok || !data.success) {
+            body: JSON.stringify({
+              email,
+              password,
+            }),
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if (
+        !response.ok ||
+        !data.success
+      ) {
         return {
           success: false,
+
           message:
             data?.message ||
             'Failed to login',
+
           requiresVerification:
             data?.requiresVerification ||
             false,
@@ -314,6 +398,16 @@ export const AuthProvider = ({ children }) => {
         setUser(data.user);
       }
 
+      /*
+        Tell LibraryContext that the
+        logged-in user has changed.
+      */
+      window.dispatchEvent(
+        new Event(
+          'sukoon-auth-changed'
+        )
+      );
+
       return {
         success: true,
         message: data.message,
@@ -328,6 +422,7 @@ export const AuthProvider = ({ children }) => {
 
       return {
         success: false,
+
         message:
           'Unable to connect to the server.',
       };
@@ -339,31 +434,51 @@ export const AuthProvider = ({ children }) => {
   ===================================================== */
 
   const logout = () => {
-    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(
+      TOKEN_KEY
+    );
 
     setToken(null);
     setUser(null);
+
+    /*
+      Tell LibraryContext that the
+      current user session has ended.
+
+      LibraryContext will then clear
+      the current user's library from
+      React state.
+    */
+    window.dispatchEvent(
+      new Event(
+        'sukoon-auth-changed'
+      )
+    );
   };
 
   /* =====================================================
      REFRESH USER
   ===================================================== */
 
-  const refreshUser = async () => {
-    const currentToken =
-      localStorage.getItem(TOKEN_KEY);
+  const refreshUser =
+    async () => {
+      const currentToken =
+        localStorage.getItem(
+          TOKEN_KEY
+        );
 
-    if (!currentToken) {
-      return {
-        success: false,
-        message: 'Not authenticated',
-      };
-    }
+      if (!currentToken) {
+        return {
+          success: false,
+          message:
+            'Not authenticated',
+        };
+      }
 
-    return fetchCurrentUser(
-      currentToken
-    );
-  };
+      return fetchCurrentUser(
+        currentToken
+      );
+    };
 
   /* =====================================================
      CONTEXT VALUE
@@ -384,7 +499,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider
+      value={value}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -395,7 +512,8 @@ export const AuthProvider = ({ children }) => {
 ======================================================= */
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
+  const context =
+    useContext(AuthContext);
 
   if (!context) {
     throw new Error(

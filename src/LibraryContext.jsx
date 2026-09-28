@@ -3,374 +3,745 @@ import React, {
   useState,
   useContext,
   useEffect,
+  useCallback,
 } from 'react';
 
-const LibraryContext = createContext();
+import { API_BASE_URL } from './config';
 
-const STORAGE_KEYS = {
-  likedSongs: 'likedSongs',
-  playlists: 'playlists',
-  likedPlaylists: 'likedPlaylists',
-};
-
-const getStoredData = (key, fallback = []) => {
-  try {
-    const savedData = localStorage.getItem(key);
-
-    if (!savedData) {
-      return fallback;
-    }
-
-    const parsedData = JSON.parse(savedData);
-
-    return Array.isArray(parsedData)
-      ? parsedData
-      : fallback;
-  } catch (error) {
-    console.error(
-      `Failed to read ${key} from localStorage:`,
-      error
-    );
-
-    return fallback;
-  }
-};
+const LibraryContext =
+  createContext();
 
 export const useLibrary = () =>
   useContext(LibraryContext);
 
+
+/*
+=========================================================
+HELPER
+=========================================================
+*/
+
+const getToken = () => {
+  return localStorage.getItem(
+    'sukoon_token'
+  );
+};
+
+
+/*
+=========================================================
+PROVIDER
+=========================================================
+*/
+
 export const LibraryProvider = ({
   children,
 }) => {
-  const [likedSongs, setLikedSongs] =
-    useState([]);
+  const [
+    likedSongs,
+    setLikedSongs,
+  ] = useState([]);
 
-  const [playlists, setPlaylists] =
-    useState([]);
+  const [
+    playlists,
+    setPlaylists,
+  ] = useState([]);
 
   const [
     likedPlaylists,
     setLikedPlaylists,
   ] = useState([]);
 
-  const [libraryLoaded, setLibraryLoaded] =
-    useState(false);
+  const [
+    libraryLoaded,
+    setLibraryLoaded,
+  ] = useState(false);
+
 
   /*
-    Load the library once when the app starts.
+  =======================================================
+  LOAD LIBRARY FROM DATABASE
+  =======================================================
   */
-  useEffect(() => {
-    setLikedSongs(
-      getStoredData(
-        STORAGE_KEYS.likedSongs
-      )
-    );
 
-    setPlaylists(
-      getStoredData(
-        STORAGE_KEYS.playlists
-      )
-    );
+  const loadLibrary = useCallback(
+    async () => {
+      const token =
+        getToken();
 
-    setLikedPlaylists(
-      getStoredData(
-        STORAGE_KEYS.likedPlaylists
-      )
-    );
+      if (!token) {
+        setLikedSongs([]);
+        setPlaylists([]);
+        setLikedPlaylists([]);
+        setLibraryLoaded(true);
 
-    setLibraryLoaded(true);
-  }, []);
+        return;
+      }
+
+      try {
+        setLibraryLoaded(false);
+
+        const response =
+          await fetch(
+            `${API_BASE_URL}/api/library`,
+            {
+              method: 'GET',
+
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        const data =
+          await response.json();
+
+        if (
+          response.status === 401
+        ) {
+          setLikedSongs([]);
+          setPlaylists([]);
+          setLikedPlaylists([]);
+
+          return;
+        }
+
+        if (!data.success) {
+          throw new Error(
+            data.message ||
+              'Failed to load library.'
+          );
+        }
+
+        setLikedSongs(
+          data.library
+            ?.likedSongs || []
+        );
+
+        setPlaylists(
+          data.library
+            ?.playlists || []
+        );
+
+        setLikedPlaylists(
+          data.library
+            ?.likedPlaylists || []
+        );
+      } catch (error) {
+        console.error(
+          'Failed to load library:',
+          error
+        );
+
+        setLikedSongs([]);
+        setPlaylists([]);
+        setLikedPlaylists([]);
+      } finally {
+        setLibraryLoaded(true);
+      }
+    },
+    []
+  );
+
 
   /*
-    Save automatically whenever data changes.
-
-    We wait until the initial library data
-    has loaded so we don't accidentally
-    overwrite existing localStorage data.
+  =======================================================
+  LOAD WHEN APP STARTS / USER AUTH CHANGES
+  =======================================================
   */
-  useEffect(() => {
-    if (!libraryLoaded) return;
-
-    try {
-      localStorage.setItem(
-        STORAGE_KEYS.likedSongs,
-        JSON.stringify(likedSongs)
-      );
-    } catch (error) {
-      console.error(
-        'Failed to save liked songs:',
-        error
-      );
-    }
-  }, [
-    likedSongs,
-    libraryLoaded,
-  ]);
 
   useEffect(() => {
-    if (!libraryLoaded) return;
+    loadLibrary();
 
-    try {
-      localStorage.setItem(
-        STORAGE_KEYS.playlists,
-        JSON.stringify(playlists)
-      );
-    } catch (error) {
-      console.error(
-        'Failed to save playlists:',
-        error
-      );
-    }
-  }, [
-    playlists,
-    libraryLoaded,
-  ]);
+    const handleAuthChange =
+      () => {
+        loadLibrary();
+      };
 
-  useEffect(() => {
-    if (!libraryLoaded) return;
+    window.addEventListener(
+      'sukoon-auth-changed',
+      handleAuthChange
+    );
 
-    try {
-      localStorage.setItem(
-        STORAGE_KEYS.likedPlaylists,
-        JSON.stringify(likedPlaylists)
+    return () => {
+      window.removeEventListener(
+        'sukoon-auth-changed',
+        handleAuthChange
       );
-    } catch (error) {
-      console.error(
-        'Failed to save liked playlists:',
-        error
-      );
-    }
-  }, [
-    likedPlaylists,
-    libraryLoaded,
-  ]);
+    };
+  }, [loadLibrary]);
+
 
   /*
-    SONG LIKES
+  =======================================================
+  SONG LIKES
+  =======================================================
   */
 
-  const isLiked = (songId) => {
-    if (!songId) return false;
+  const isLiked = (
+    songId
+  ) => {
+    if (!songId) {
+      return false;
+    }
 
     return likedSongs.some(
       (song) =>
-        song?.id === songId
+        String(song?.id) ===
+        String(songId)
     );
   };
 
-  const toggleLike = (song) => {
-    if (!song?.id) return;
 
-    setLikedSongs((previousSongs) => {
-      const alreadyLiked =
-        previousSongs.some(
-          (item) =>
-            item.id === song.id
+  const toggleLike = async (
+    song
+  ) => {
+    if (!song?.id) {
+      return;
+    }
+
+    const token =
+      getToken();
+
+    if (!token) {
+      console.warn(
+        'User must be logged in to like a song.'
+      );
+
+      return;
+    }
+
+    const alreadyLiked =
+      isLiked(song.id);
+
+    try {
+      if (alreadyLiked) {
+        const response =
+          await fetch(
+            `${API_BASE_URL}/api/library/likes/${encodeURIComponent(
+              song.id
+            )}`,
+            {
+              method: 'DELETE',
+
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        const data =
+          await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.message ||
+              'Failed to unlike song.'
+          );
+        }
+
+        setLikedSongs(
+          (previousSongs) =>
+            previousSongs.filter(
+              (item) =>
+                String(item?.id) !==
+                String(song.id)
+            )
         );
 
-      if (alreadyLiked) {
-        return previousSongs.filter(
-          (item) =>
-            item.id !== song.id
+        return;
+      }
+
+
+      const response =
+        await fetch(
+          `${API_BASE_URL}/api/library/likes`,
+          {
+            method: 'POST',
+
+            headers: {
+              'Content-Type':
+                'application/json',
+
+              Authorization:
+                `Bearer ${token}`,
+            },
+
+            body: JSON.stringify({
+              song,
+            }),
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            'Failed to like song.'
         );
       }
 
-      return [
-        ...previousSongs,
-        song,
-      ];
-    });
+      setLikedSongs(
+        (previousSongs) => [
+          ...previousSongs,
+          data.song || song,
+        ]
+      );
+    } catch (error) {
+      console.error(
+        'Toggle like error:',
+        error
+      );
+    }
   };
 
+
   /*
-    PLAYLIST LIKES
+  =======================================================
+  PLAYLIST LIKES
+  =======================================================
   */
 
   const isPlaylistLiked = (
     playlistId
   ) => {
-    if (!playlistId) return false;
+    if (!playlistId) {
+      return false;
+    }
 
     return likedPlaylists.some(
       (playlist) =>
-        playlist?.id === playlistId
+        String(playlist?.id) ===
+        String(playlistId)
     );
   };
 
-  const toggleLikePlaylist = (
-    playlist
-  ) => {
-    if (!playlist?.id) return;
 
-    setLikedPlaylists(
-      (previousPlaylists) => {
-        const alreadyLiked =
-          previousPlaylists.some(
-            (item) =>
-              item.id === playlist.id
+  const toggleLikePlaylist =
+    async (playlist) => {
+      if (!playlist?.id) {
+        return;
+      }
+
+      const token =
+        getToken();
+
+      if (!token) {
+        return;
+      }
+
+      const alreadyLiked =
+        isPlaylistLiked(
+          playlist.id
+        );
+
+      try {
+        if (alreadyLiked) {
+          const response =
+            await fetch(
+              `${API_BASE_URL}/api/library/liked-playlists/${encodeURIComponent(
+                playlist.id
+              )}`,
+              {
+                method: 'DELETE',
+
+                headers: {
+                  Authorization:
+                    `Bearer ${token}`,
+                },
+              }
+            );
+
+          const data =
+            await response.json();
+
+          if (!response.ok) {
+            throw new Error(
+              data.message ||
+                'Failed to unlike playlist.'
+            );
+          }
+
+          setLikedPlaylists(
+            (previous) =>
+              previous.filter(
+                (item) =>
+                  String(item?.id) !==
+                  String(playlist.id)
+              )
           );
 
-        if (alreadyLiked) {
-          return previousPlaylists.filter(
-            (item) =>
-              item.id !== playlist.id
+          return;
+        }
+
+
+        const response =
+          await fetch(
+            `${API_BASE_URL}/api/library/liked-playlists`,
+            {
+              method: 'POST',
+
+              headers: {
+                'Content-Type':
+                  'application/json',
+
+                Authorization:
+                  `Bearer ${token}`,
+              },
+
+              body: JSON.stringify({
+                playlist,
+              }),
+            }
+          );
+
+        const data =
+          await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.message ||
+              'Failed to like playlist.'
           );
         }
 
-        return [
-          ...previousPlaylists,
-          {
-            id: playlist.id,
-            name:
-              playlist.name ||
-              'Untitled Playlist',
-            image:
-              playlist.image ||
-              null,
-          },
-        ];
+        setLikedPlaylists(
+          (previous) => [
+            ...previous,
+            {
+              id: playlist.id,
+              name:
+                playlist.name ||
+                'Untitled Playlist',
+              image:
+                playlist.image ||
+                null,
+            },
+          ]
+        );
+      } catch (error) {
+        console.error(
+          'Toggle playlist like error:',
+          error
+        );
       }
-    );
-  };
-
-  /*
-    LOCAL PLAYLISTS
-  */
-
-  const createPlaylist = (
-    name,
-    songToAdd = null
-  ) => {
-    const cleanName =
-      name?.trim();
-
-    if (!cleanName) {
-      return null;
-    }
-
-    const newPlaylist = {
-      id: `${Date.now()}-${Math.random()
-        .toString(36)
-        .slice(2, 8)}`,
-      name: cleanName,
-      songs:
-        songToAdd?.id
-          ? [songToAdd]
-          : [],
-      createdAt:
-        new Date().toISOString(),
     };
 
-    setPlaylists(
-      (previousPlaylists) => [
-        ...previousPlaylists,
-        newPlaylist,
-      ]
-    );
 
-    return newPlaylist;
-  };
+  /*
+  =======================================================
+  CREATE PLAYLIST
+  =======================================================
+  */
 
-  const addToPlaylist = (
-    playlistId,
-    song
-  ) => {
-    if (!playlistId || !song?.id) {
-      return;
-    }
+  const createPlaylist =
+    async (
+      name,
+      songToAdd = null
+    ) => {
+      const cleanName =
+        name?.trim();
 
-    setPlaylists(
-      (previousPlaylists) =>
-        previousPlaylists.map(
-          (playlist) => {
-            if (
-              playlist.id !==
+      if (!cleanName) {
+        return null;
+      }
+
+      const token =
+        getToken();
+
+      if (!token) {
+        return null;
+      }
+
+      try {
+        const response =
+          await fetch(
+            `${API_BASE_URL}/api/library/playlists`,
+            {
+              method: 'POST',
+
+              headers: {
+                'Content-Type':
+                  'application/json',
+
+                Authorization:
+                  `Bearer ${token}`,
+              },
+
+              body: JSON.stringify({
+                name: cleanName,
+                songToAdd:
+                  songToAdd?.id
+                    ? songToAdd
+                    : null,
+              }),
+            }
+          );
+
+        const data =
+          await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.message ||
+              'Failed to create playlist.'
+          );
+        }
+
+        const newPlaylist =
+          data.playlist;
+
+        setPlaylists(
+          (previous) => [
+            ...previous,
+            newPlaylist,
+          ]
+        );
+
+        return newPlaylist;
+      } catch (error) {
+        console.error(
+          'Create playlist error:',
+          error
+        );
+
+        return null;
+      }
+    };
+
+
+  /*
+  =======================================================
+  ADD SONG TO PLAYLIST
+  =======================================================
+  */
+
+  const addToPlaylist =
+    async (
+      playlistId,
+      song
+    ) => {
+      if (
+        !playlistId ||
+        !song?.id
+      ) {
+        return;
+      }
+
+      const token =
+        getToken();
+
+      if (!token) {
+        return;
+      }
+
+      try {
+        const response =
+          await fetch(
+            `${API_BASE_URL}/api/library/playlists/${encodeURIComponent(
               playlistId
-            ) {
-              return playlist;
-            }
+            )}/songs`,
+            {
+              method: 'POST',
 
-            const songs =
-              Array.isArray(
-                playlist.songs
-              )
-                ? playlist.songs
-                : [];
+              headers: {
+                'Content-Type':
+                  'application/json',
 
-            const alreadyExists =
-              songs.some(
-                (item) =>
-                  item.id === song.id
-              );
+                Authorization:
+                  `Bearer ${token}`,
+              },
 
-            if (alreadyExists) {
-              return playlist;
-            }
-
-            return {
-              ...playlist,
-              songs: [
-                ...songs,
+              body: JSON.stringify({
                 song,
-              ],
-            };
-          }
-        )
-    );
-  };
-
-  const removeFromPlaylist = (
-    playlistId,
-    songId
-  ) => {
-    if (!playlistId || !songId) {
-      return;
-    }
-
-    setPlaylists(
-      (previousPlaylists) =>
-        previousPlaylists.map(
-          (playlist) => {
-            if (
-              playlist.id !==
-              playlistId
-            ) {
-              return playlist;
+              }),
             }
+          );
 
-            const songs =
-              Array.isArray(
-                playlist.songs
-              )
-                ? playlist.songs
-                : [];
+        const data =
+          await response.json();
 
-            return {
-              ...playlist,
-              songs: songs.filter(
-                (song) =>
-                  song.id !== songId
-              ),
-            };
-          }
-        )
-    );
-  };
+        if (!response.ok) {
+          throw new Error(
+            data.message ||
+              'Failed to add song to playlist.'
+          );
+        }
 
-  const deletePlaylist = (
-    playlistId
-  ) => {
-    if (!playlistId) return;
+        setPlaylists(
+          (previous) =>
+            previous.map(
+              (playlist) =>
+                String(
+                  playlist.id
+                ) ===
+                String(playlistId)
+                  ? data.playlist
+                  : playlist
+            )
+        );
+      } catch (error) {
+        console.error(
+          'Add to playlist error:',
+          error
+        );
+      }
+    };
 
-    setPlaylists(
-      (previousPlaylists) =>
-        previousPlaylists.filter(
-          (playlist) =>
-            playlist.id !==
-            playlistId
-        )
-    );
-  };
+
+  /*
+  =======================================================
+  REMOVE SONG FROM PLAYLIST
+  =======================================================
+  */
+
+  const removeFromPlaylist =
+    async (
+      playlistId,
+      songId
+    ) => {
+      if (
+        !playlistId ||
+        !songId
+      ) {
+        return;
+      }
+
+      const token =
+        getToken();
+
+      if (!token) {
+        return;
+      }
+
+      try {
+        const response =
+          await fetch(
+            `${API_BASE_URL}/api/library/playlists/${encodeURIComponent(
+              playlistId
+            )}/songs/${encodeURIComponent(
+              songId
+            )}`,
+            {
+              method: 'DELETE',
+
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        const data =
+          await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.message ||
+              'Failed to remove song.'
+          );
+        }
+
+        setPlaylists(
+          (previous) =>
+            previous.map(
+              (playlist) =>
+                String(
+                  playlist.id
+                ) ===
+                String(playlistId)
+                  ? data.playlist
+                  : playlist
+            )
+        );
+      } catch (error) {
+        console.error(
+          'Remove from playlist error:',
+          error
+        );
+      }
+    };
+
+
+  /*
+  =======================================================
+  DELETE PLAYLIST
+  =======================================================
+  */
+
+  const deletePlaylist =
+    async (playlistId) => {
+      if (!playlistId) {
+        return;
+      }
+
+      const token =
+        getToken();
+
+      if (!token) {
+        return;
+      }
+
+      try {
+        const response =
+          await fetch(
+            `${API_BASE_URL}/api/library/playlists/${encodeURIComponent(
+              playlistId
+            )}`,
+            {
+              method: 'DELETE',
+
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        const data =
+          await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.message ||
+              'Failed to delete playlist.'
+          );
+        }
+
+        setPlaylists(
+          (previous) =>
+            previous.filter(
+              (playlist) =>
+                String(
+                  playlist.id
+                ) !==
+                String(playlistId)
+            )
+        );
+      } catch (error) {
+        console.error(
+          'Delete playlist error:',
+          error
+        );
+      }
+    };
+
+
+  /*
+  =======================================================
+  REFRESH LIBRARY
+  =======================================================
+  */
+
+  const refreshLibrary =
+    async () => {
+      await loadLibrary();
+    };
+
 
   return (
     <LibraryContext.Provider
@@ -390,6 +761,8 @@ export const LibraryProvider = ({
 
         toggleLikePlaylist,
         isPlaylistLiked,
+
+        refreshLibrary,
       }}
     >
       {children}
