@@ -58,28 +58,7 @@ import AuthPage from './pages/AuthPage';
 import VerifyEmail from './pages/VerifyEmail';
 import WelcomeModal from './components/WelcomeModal';
 
-import SpecialMessage from './special/SpecialMessage';
-
 import './App.css';
-
-
-/* =========================================================
-   SPECIAL MESSAGE CONFIGURATION
-========================================================= */
-
-const specialEmails = (
-  import.meta.env.VITE_SPECIAL_EMAILS || ''
-)
-  .split(',')
-  .map((email) =>
-    email.trim().toLowerCase()
-  )
-  .filter(Boolean);
-
-const specialMessageEnabled =
-  import.meta.env.VITE_SPECIAL_MESSAGE_ENABLED !==
-  'false';
-
 
 /* =========================================================
    MAIN CONTENT
@@ -334,10 +313,6 @@ function Layout() {
     information is loading.
   */
 
-  const [
-    showSpecialMessage,
-    setShowSpecialMessage,
-  ] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -354,44 +329,6 @@ function Layout() {
 
   const recognitionRef =
     useRef(null);
-
-
-  /* -------------------------------------------------------
-     SPECIAL USER CHECK
-  ------------------------------------------------------- */
-
-  const isSpecialUser =
-    specialMessageEnabled &&
-    Boolean(
-      user?.email &&
-      specialEmails.includes(
-        user.email
-          .trim()
-          .toLowerCase()
-      )
-    );
-
-
-  /* -------------------------------------------------------
-     SHOW SPECIAL MESSAGE
-  ------------------------------------------------------- */
-
-  useEffect(() => {
-    if (!isSpecialUser) {
-      setShowSpecialMessage(false);
-      return;
-    }
-
-    /*
-      This becomes true whenever the special
-      user is authenticated.
-
-      Because this is React state, refreshing
-      the website will show it again.
-    */
-
-    setShowSpecialMessage(true);
-  }, [isSpecialUser]);
 
 
   /* -------------------------------------------------------
@@ -531,13 +468,6 @@ function Layout() {
 
   const handleLogout = () => {
     setShowAccountMenu(false);
-
-    /*
-      Also close special popup immediately
-      when the special user logs out.
-    */
-
-    setShowSpecialMessage(false);
 
     logout();
 
@@ -1269,31 +1199,6 @@ function Layout() {
           }
         />
       )}
-
-
-      {/* ===================================================
-          SPECIAL MESSAGE
-      =================================================== */}
-
-      {isSpecialUser &&
-        showSpecialMessage && (
-          <SpecialMessage
-            userName={
-              user?.name || 'Mayank'
-            }
-            backgroundImage="/special/special-wallpaper.jpeg"
-            onComplete={() => {
-              console.log(
-                'Special message completed'
-              );
-            }}
-            onClose={() => {
-              setShowSpecialMessage(
-                false
-              );
-            }}
-          />
-        )}
 
     </div>
   );
